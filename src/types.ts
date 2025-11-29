@@ -15,3 +15,12 @@ export type UserType = {
 export type FireStoreUserType = UserType & {
   id: string;
 };
+
+export type BookType = {
+  id: string;
+  title: string;
+  author: string;
+  isbn: string;
+  location: string;
+  status: "Available" | "Checked Out" | "Overdue";
+};

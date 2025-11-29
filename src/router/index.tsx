@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 import DashboardLayout from "../pages/DashboardLayout";
 import PageNotFound from "../pages/PageNotFound";
-import DashboardPage from "../pages/DashboardPage";
+import Dashboard from "../pages/Dashboard";
 import Books from "../pages/Books";
 import Students from "../pages/Students";
 import Transactions from "../pages/Transactions";
@@ -15,7 +15,7 @@ export default createBrowserRouter([
     element: <DashboardLayout />,
     errorElement: <PageNotFound />,
     children: [
-      { path: "/", element: <DashboardPage /> },
+      { path: "/", element: <Dashboard /> },
       { path: "/books", element: <Books /> },
       { path: "/students", element: <Students /> },
       { path: "/transactions", element: <Transactions /> },

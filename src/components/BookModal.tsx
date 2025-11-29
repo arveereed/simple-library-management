@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "./Button";
-
-type BookType = {
-  id: string;
-  title: string;
-  author: string;
-  isbn: string;
-  location: string;
-  status: "Available" | "Checked Out" | "Overdue";
-};
+import type { BookType } from "../types";
+import { addBook } from "../services/bookService";
 
 interface BookModalProps {
   book?: BookType | null;
   onClose: () => void;
   onSave: (bookData: BookType) => void;
+  books: BookType[];
 }
 
-export const BookModal = ({ book, onClose, onSave }: BookModalProps) => {
+export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [isbn, setIsbn] = useState("");
@@ -47,7 +41,7 @@ export const BookModal = ({ book, onClose, onSave }: BookModalProps) => {
     }
 
     const bookData: BookType = {
-      id: book?.id || Date.now().toString(),
+      id: books.length == 0 ? "1" : `${Number(books[books.length - 1].id) + 1}`,
       title,
       author,
       isbn,
@@ -56,6 +50,7 @@ export const BookModal = ({ book, onClose, onSave }: BookModalProps) => {
     };
 
     onSave(bookData);
+    addBook(bookData); // save in db
   };
 
   return (

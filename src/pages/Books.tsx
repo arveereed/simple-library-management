@@ -4,51 +4,17 @@ import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { CardContent } from "../components/CardContent";
 import { BookModal } from "../components/BookModal";
+import type { BookType } from "../types";
 
-// Temporary book type
-type Book = {
-  id: string;
-  title: string;
-  author: string;
-  isbn: string;
-  location: string;
-  status: "Available" | "Checked Out" | "Overdue";
-};
-
-// Temporary books data
-const TEMP_BOOKS: Book[] = [
-  {
-    id: "1",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    isbn: "9780743273565",
-    location: "Shelf A1",
-    status: "Available",
-  },
-  {
-    id: "2",
-    title: "1984",
-    author: "George Orwell",
-    isbn: "9780451524935",
-    location: "Shelf B3",
-    status: "Checked Out",
-  },
-  {
-    id: "3",
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
-    isbn: "9780061120084",
-    location: "Shelf C2",
-    status: "Overdue",
-  },
-];
+// Temporary books data, act as a db
+const TEMP_BOOKS: BookType[] = [];
 
 export default function BooksPage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<BookType[]>([]);
+  const [filteredBooks, setFilteredBooks] = useState<BookType[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [editingBook, setEditingBook] = useState<BookType | null>(null);
 
   // Load temporary books on mount
   useEffect(() => {
@@ -66,12 +32,20 @@ export default function BooksPage() {
     setFilteredBooks(filtered);
   }, [searchTerm, books]);
 
-  const handleAddBook = (bookData: Book) => {
-    setBooks((prev) => [...prev, { ...bookData, id: Date.now().toString() }]);
+  const handleAddBook = (bookData: BookType) => {
+    setBooks((prev) => [
+      ...prev,
+      {
+        ...bookData,
+        id:
+          books.length == 0 ? "1" : `${Number(books[books.length - 1].id) + 1}`,
+      },
+    ]);
+
     setIsModalOpen(false);
   };
 
-  const handleUpdateBook = (bookData: Book) => {
+  const handleUpdateBook = (bookData: BookType) => {
     if (editingBook) {
       setBooks((prev) =>
         prev.map((b) =>
@@ -190,15 +164,9 @@ export default function BooksPage() {
                             <td className="p-4">
                               <span
                                 className={`
-                        inline-block px-3 py-1 rounded-full text-xs font-medium
-                        ${
-                          book.status === "Available"
-                            ? "bg-green-100 text-green-700"
-                            : book.status === "Checked Out"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
-                        }
-                      `}
+                        inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          book.status
+                        )}`}
                               >
                                 {book.status}
                               </span>
@@ -247,6 +215,7 @@ export default function BooksPage() {
             setEditingBook(null);
           }}
           onSave={editingBook ? handleUpdateBook : handleAddBook}
+          books={books}
         />
       )}
     </div>
