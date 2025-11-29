@@ -6,5 +6,5 @@ type CardContentProps = {
 };
 
 export const CardContent = ({ children, className = "" }: CardContentProps) => {
-  return <div className={`p-6 ${className}`}>{children}</div>;
+  return <div className={`${className}`}>{children}</div>;
 };
