@@ -1,0 +1,45 @@
+import {
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  Timestamp,
+  where,
+} from "firebase/firestore";
+import { db } from "../config/firebase";
+import type { FireStoreUserType, UserDataSignUpType, UserType } from "../types";
+
+export const addUser = async (userData: UserDataSignUpType) => {
+  try {
+    const usersCollection = collection(db, "users");
+
+    await addDoc(usersCollection, {
+      ...userData,
+      createdAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error("Error adding user: ", error);
+  }
+};
+
+export const getUserById = async (
+  userId: string
+): Promise<FireStoreUserType | null> => {
+  try {
+    const usersCollection = collection(db, "users");
+    const q = query(usersCollection, where("user_id", "==", userId));
+
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      const docSnap = querySnapshot.docs[0];
+      return { ...(docSnap.data() as UserType), id: docSnap.id };
+    }
+
+    console.warn(`No user found with ID: ${userId}`);
+    return null;
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return null;
+  }
+};
