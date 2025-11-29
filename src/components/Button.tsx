@@ -3,18 +3,20 @@ import { cn } from "../lib/utils";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "primary" | "secondary" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg"; // new size prop
   icon?: React.ReactNode;
 }
 
 export function Button({
   children,
   variant = "primary",
+  size = "md",
   icon,
   className,
   ...props
 }: ButtonProps) {
   const base =
-    "px-4 py-2 rounded-xl font-medium flex items-center gap-2 transition active:scale-[0.97]";
+    "rounded-xl font-medium flex items-center gap-2 transition active:scale-[0.97]";
 
   const variants = {
     default: "bg-slate-500 text-white hover:bg-primary/90",
@@ -24,8 +26,17 @@ export function Button({
     ghost: "text-gray-700 hover:bg-gray-200",
   };
 
+  const sizes = {
+    sm: "px-3 py-1 text-sm",
+    md: "px-4 py-2 text-base",
+    lg: "px-6 py-3 text-lg",
+  };
+
   return (
-    <button className={cn(base, variants[variant], className)} {...props}>
+    <button
+      className={cn(base, variants[variant], sizes[size], className)}
+      {...props}
+    >
       {icon}
       {children}
     </button>
