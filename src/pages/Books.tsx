@@ -8,17 +8,15 @@ import type { BookType } from "../types";
 import { useBooks } from "../hooks/useBooks";
 
 export default function BooksPage() {
-  const { data, isLoading } = useBooks();
+  const { data: booksData, isLoading } = useBooks();
+  const books: BookType[] = booksData ?? [];
 
-  const [books, setBooks] = useState<BookType[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<BookType[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<BookType | null>(null);
 
-  if (data && books !== data) setBooks(data);
-
-  // Filter books when searchTerm or books changes
+  // Filter whenever books or search changes
   useEffect(() => {
     const filtered = books.filter(
       (book) =>
@@ -26,37 +24,23 @@ export default function BooksPage() {
         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
         book.isbn.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     setFilteredBooks(filtered);
   }, [searchTerm, books]);
 
-  const handleAddBook = (bookData: BookType) => {
-    setBooks((prev) => [
-      ...prev,
-      {
-        ...bookData,
-        id:
-          books.length == 0 ? "1" : `${Number(books[books.length - 1].id) + 1}`,
-      },
-    ]);
-
-    setIsModalOpen(false);
+  const handleAddBook = () => {
+    // React Query handles updates via invalidateQueries in your mutation hook
   };
 
-  const handleUpdateBook = (bookData: BookType) => {
-    if (editingBook) {
-      setBooks((prev) =>
-        prev.map((b) =>
-          b.id === editingBook.id ? { ...bookData, id: b.id } : b
-        )
-      );
-      setEditingBook(null);
-      setIsModalOpen(false);
-    }
+  const handleUpdateBook = () => {
+    setEditingBook(null);
+    setIsModalOpen(false);
   };
 
   const handleDeleteBook = (id: string) => {
     if (confirm("Are you sure you want to delete this book?")) {
-      setBooks((prev) => prev.filter((b) => b.id !== id));
+      // TODO: add delete mutation here
+      console.log("DELETE: ", id);
     }
   };
 
@@ -111,7 +95,7 @@ export default function BooksPage() {
             />
           </div>
 
-          {/* Books Table - improved styling to match screenshot */}
+          {/* Books Table */}
           <Card>
             <CardContent>
               <div className="overflow-x-auto">
@@ -119,9 +103,7 @@ export default function BooksPage() {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-100 text-black text-xl">
                       <tr>
-                        <th className="text-left p-4 font-semibold first:rounded-tl-xl last:rounded-tr-xl">
-                          Title
-                        </th>
+                        <th className="text-left p-4 font-semibold">Title</th>
                         <th className="text-left p-4 font-semibold">Author</th>
                         <th className="text-left p-4 font-semibold">ISBN</th>
                         <th className="text-left p-4 font-semibold">
@@ -136,31 +118,25 @@ export default function BooksPage() {
 
                     <tbody className="bg-white text-base">
                       {isLoading ? (
-                        // Skeleton rows while loading
                         Array.from({ length: 5 }).map((_, i) => (
                           <tr
                             key={i}
                             className="border-b border-gray-300 animate-pulse"
                           >
-                            {[
-                              "w-40", // Title
-                              "w-32", // Author
-                              "w-28", // ISBN
-                              "w-28", // Location
-                              "w-20", // Status
-                            ].map((w, idx) => (
-                              <td key={idx} className="p-4">
-                                <div
-                                  className={`h-4 bg-gray-200 dark:bg-gray-300 rounded-md ${w}`}
-                                />
-                              </td>
-                            ))}
+                            {["w-40", "w-32", "w-28", "w-28", "w-20"].map(
+                              (w, idx) => (
+                                <td key={idx} className="p-4">
+                                  <div
+                                    className={`h-4 bg-gray-200 dark:bg-gray-300 rounded-md ${w}`}
+                                  />
+                                </td>
+                              )
+                            )}
 
-                            {/* Actions */}
                             <td className="p-4">
                               <div className="flex justify-end items-center gap-3">
-                                <div className="h-6 w-6 bg-gray-200 dark:bg-gray-300 rounded-md"></div>
-                                <div className="h-6 w-6 bg-gray-200 dark:bg-gray-300 rounded-md"></div>
+                                <div className="h-6 w-6 bg-gray-200 rounded-md"></div>
+                                <div className="h-6 w-6 bg-gray-200 rounded-md"></div>
                               </div>
                             </td>
                           </tr>
@@ -178,9 +154,7 @@ export default function BooksPage() {
                         filteredBooks.map((book, idx) => (
                           <tr
                             key={book.id}
-                            className={`border-b border-gray-300 ${
-                              idx === filteredBooks.length - 1 ? "" : ""
-                            }`}
+                            className="border-b border-gray-300"
                           >
                             <td className="p-4 font-medium">{book.title}</td>
                             <td className="p-4">{book.author}</td>
@@ -203,7 +177,6 @@ export default function BooksPage() {
                                     setIsModalOpen(true);
                                   }}
                                   className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
-                                  aria-label="edit"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
@@ -211,7 +184,6 @@ export default function BooksPage() {
                                 <button
                                   onClick={() => handleDeleteBook(book.id)}
                                   className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer"
-                                  aria-label="delete"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -237,7 +209,7 @@ export default function BooksPage() {
             setEditingBook(null);
           }}
           onSave={editingBook ? handleUpdateBook : handleAddBook}
-          books={books}
+          books={books} // still needed for validation inside modal
         />
       )}
     </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 import type { BookType } from "../types";
-import { addBook } from "../services/bookService";
+import { useAddBooks } from "../hooks/useAddBooks";
 
 interface BookModalProps {
   book?: BookType | null;
@@ -34,6 +34,19 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
     }
   }, [book]);
 
+  const {
+    mutate,
+    isPending,
+    isError: isMutationError,
+    isSuccess,
+  } = useAddBooks();
+
+  useEffect(() => {
+    if (isSuccess) {
+      onClose();
+    }
+  }, [isSuccess]);
+
   const handleSubmit = () => {
     if (!title || !author || !isbn || !location) {
       alert("Please fill all fields");
@@ -41,7 +54,7 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
     }
 
     const bookData: BookType = {
-      id: books.length == 0 ? "1" : `${Number(books[books.length - 1].id) + 1}`,
+      id: Date.now().toString(),
       title,
       author,
       isbn,
@@ -49,8 +62,10 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
       status,
     };
 
+    // add book in db firebase
+    mutate(bookData);
+
     onSave(bookData);
-    addBook(bookData); // save in db
   };
 
   return (
@@ -116,8 +131,18 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
           >
             Cancel
           </Button>
-          <Button className="cursor-pointer" onClick={handleSubmit}>
-            {book ? "Update" : "Add"}
+          <Button
+            className="cursor-pointer"
+            onClick={handleSubmit}
+            disabled={isPending}
+          >
+            {book
+              ? isPending
+                ? "Updating.."
+                : "Update Book"
+              : isPending
+              ? "Adding.."
+              : "Add Book"}
           </Button>
         </div>
       </div>
