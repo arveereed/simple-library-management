@@ -12,13 +12,13 @@ export function SidebarNav() {
 
   return (
     <>
-      <aside className="w-64 bg-primary text-primary-foreground flex flex-col min-h-screen">
+      <aside className="w-64 bg-black text-primary-foreground flex flex-col min-h-screen">
         <div className="p-6 border-b border-primary/20">
           <div className="flex items-center gap-2">
-            <BookOpen className="w-8 h-8" />
+            <BookOpen className="w-8 h-8 text-white" />
             <div>
-              <h1 className="font-bold text-lg">Library</h1>
-              <p className="text-xs opacity-80">Management System</p>
+              <h1 className="font-bold text-xl text-white">Library</h1>
+              <p className="text-sm opacity-80 text-white">Management System</p>
             </div>
           </div>
         </div>
@@ -72,7 +72,7 @@ function NavLink({ to, active, icon, label }: NavLinkProps) {
   return (
     <RouterLink to={to}>
       <Button
-        variant={active ? "default" : "ghost"}
+        variant={active ? "defaultSidebar" : "ghost"}
         className={`w-full justify-start gap-2 cursor-pointer mb-2 ${
           active
             ? "bg-primary-foreground text-primary"

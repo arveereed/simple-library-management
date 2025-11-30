@@ -225,7 +225,6 @@ export default function BooksPage() {
           book={editingBook}
           onClose={() => {
             setIsModalOpen(false);
-            setEditingBook(null);
           }}
         />
       )}

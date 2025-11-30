@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useClerk } from "@clerk/clerk-react";
 import { useState } from "react";
 import { useUserContext } from "../contexts/UserContext";
+import { Button } from "./Button";
 
 export default function Navbar_() {
   const { user, isLoading } = useUserContext();
@@ -31,7 +32,7 @@ export default function Navbar_() {
           <div className="h-5 w-48 bg-gray-300 rounded animate-pulse"></div>
         ) : (
           <Link to="/">
-            <p className="text-black font-semibold">
+            <p className="text-black text-lg font-semibold">
               {user?.fullname
                 ? `Welcome, ${user.fullname}`
                 : "Library Management System"}
@@ -59,9 +60,9 @@ export default function Navbar_() {
         ) : (
           <div className="flex items-center gap-4">
             <Link to="/login">
-              <button className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-700 transition">
+              <Button className="cursor-pointer px-4 py-2 text-white rounded-xl hover:bg-blue-700 transition">
                 Login
-              </button>
+              </Button>
             </Link>
 
             <Link to="/register">

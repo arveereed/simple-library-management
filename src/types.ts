@@ -24,3 +24,24 @@ export type BookType = {
   location: string;
   status: "Available" | "Checked Out" | "Overdue";
 };
+
+export interface Student {
+  id: string;
+  name: string;
+  studentId: string;
+  email: string;
+  phone: string;
+  history: {
+    title: string;
+    due: string;
+    status: string;
+  }[];
+}
+
+export interface StudentType {
+  id: string;
+  name: string;
+  studentId: string;
+  email: string;
+  phone: string;
+}
