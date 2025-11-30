@@ -1,10 +1,13 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   orderBy,
   query,
   Timestamp,
+  where,
 } from "firebase/firestore";
 import type { BookType } from "../types";
 import { db } from "../config/firebase";
@@ -48,4 +51,16 @@ export const getBooks = async () => {
     console.error("Error fetching all books:", error);
     return null;
   }
+};
+
+export const deleteBookByField = async (id: string) => {
+  const q = query(collection(db, "books"), where("id", "==", id));
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) return false;
+
+  const deletes = snapshot.docs.map((d) => deleteDoc(doc(db, "books", d.id)));
+  await Promise.all(deletes);
+
+  return true;
 };

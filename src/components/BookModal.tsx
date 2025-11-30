@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 import type { BookType } from "../types";
-import { useAddBooks } from "../hooks/useAddBooks";
+import { useAddBooks } from "../hooks/books/useAddBooks";
 
 interface BookModalProps {
   book?: BookType | null;

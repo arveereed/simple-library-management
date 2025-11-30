@@ -5,10 +5,13 @@ import { Card } from "../components/Card";
 import { CardContent } from "../components/CardContent";
 import { BookModal } from "../components/BookModal";
 import type { BookType } from "../types";
-import { useBooks } from "../hooks/useBooks";
+import { useBooks } from "../hooks/books/useBooks";
+import { useDeleteBook } from "../hooks/books/useDeleteBook";
 
 export default function BooksPage() {
   const { data: booksData, isLoading } = useBooks();
+  const { mutate: deleteBookMutate, isPending: isDeleting } = useDeleteBook();
+
   const books: BookType[] = booksData ?? [];
 
   const [filteredBooks, setFilteredBooks] = useState<BookType[]>([]);
@@ -40,7 +43,7 @@ export default function BooksPage() {
   const handleDeleteBook = (id: string) => {
     if (confirm("Are you sure you want to delete this book?")) {
       // TODO: add delete mutation here
-      console.log("DELETE: ", id);
+      deleteBookMutate(id);
     }
   };
 

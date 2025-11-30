@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { BookType } from "../types";
-import { addBook } from "../services/bookService";
+import { addBook } from "../../services/bookService";
+import type { BookType } from "../../types";
 
 export const useAddBooks = () => {
   const queryClient = useQueryClient();
