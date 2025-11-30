@@ -5,21 +5,18 @@ import { Card } from "../components/Card";
 import { CardContent } from "../components/CardContent";
 import { BookModal } from "../components/BookModal";
 import type { BookType } from "../types";
-
-// Temporary books data, act as a db
-const TEMP_BOOKS: BookType[] = [];
+import { useBooks } from "../hooks/useBooks";
 
 export default function BooksPage() {
+  const { data, isLoading } = useBooks();
+
   const [books, setBooks] = useState<BookType[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<BookType[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<BookType | null>(null);
 
-  // Load temporary books on mount
-  useEffect(() => {
-    setBooks(TEMP_BOOKS);
-  }, []);
+  if (data && books !== data) setBooks(data);
 
   // Filter books when searchTerm or books changes
   useEffect(() => {
@@ -138,7 +135,37 @@ export default function BooksPage() {
                     </thead>
 
                     <tbody className="bg-white text-base">
-                      {filteredBooks.length === 0 ? (
+                      {isLoading ? (
+                        // Skeleton rows while loading
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <tr
+                            key={i}
+                            className="border-b border-gray-300 animate-pulse"
+                          >
+                            {[
+                              "w-40", // Title
+                              "w-32", // Author
+                              "w-28", // ISBN
+                              "w-28", // Location
+                              "w-20", // Status
+                            ].map((w, idx) => (
+                              <td key={idx} className="p-4">
+                                <div
+                                  className={`h-4 bg-gray-200 dark:bg-gray-300 rounded-md ${w}`}
+                                />
+                              </td>
+                            ))}
+
+                            {/* Actions */}
+                            <td className="p-4">
+                              <div className="flex justify-end items-center gap-3">
+                                <div className="h-6 w-6 bg-gray-200 dark:bg-gray-300 rounded-md"></div>
+                                <div className="h-6 w-6 bg-gray-200 dark:bg-gray-300 rounded-md"></div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : filteredBooks.length === 0 ? (
                         <tr>
                           <td
                             colSpan={6}
@@ -159,20 +186,15 @@ export default function BooksPage() {
                             <td className="p-4">{book.author}</td>
                             <td className="p-4">{book.isbn}</td>
                             <td className="p-4">{book.location}</td>
-
-                            {/* Status badge */}
                             <td className="p-4">
                               <span
-                                className={`
-                        inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          book.status
-                        )}`}
+                                className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                  book.status
+                                )}`}
                               >
                                 {book.status}
                               </span>
                             </td>
-
-                            {/* Actions */}
                             <td className="p-4">
                               <div className="flex justify-end items-center gap-3">
                                 <button
