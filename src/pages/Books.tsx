@@ -7,6 +7,7 @@ import { BookModal } from "../components/BookModal";
 import type { BookType } from "../types";
 import { useBooks } from "../hooks/books/useBooks";
 import { useDeleteBook } from "../hooks/books/useDeleteBook";
+import Swal from "sweetalert2";
 
 export default function BooksPage() {
   const { data: booksData, isLoading } = useBooks();
@@ -31,19 +32,34 @@ export default function BooksPage() {
     setFilteredBooks(filtered);
   }, [searchTerm, books]);
 
-  const handleAddBook = () => {
-    // React Query handles updates via invalidateQueries in your mutation hook
-  };
+  const handleDeleteBook = async (id: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
 
-  const handleUpdateBook = () => {
-    setEditingBook(null);
-    setIsModalOpen(false);
-  };
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: "Deleting...",
+        text: "Please wait",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
 
-  const handleDeleteBook = (id: string) => {
-    if (confirm("Are you sure you want to delete this book?")) {
-      // TODO: add delete mutation here
-      deleteBookMutate(id);
+      deleteBookMutate(id, {
+        onSuccess: () => {
+          Swal.close(); // 🔥 CLOSE LOADING
+          Swal.fire("Deleted!", "Book has been removed.", "success");
+        },
+        onError: () => {
+          Swal.close();
+          Swal.fire("Error", "Failed to delete the book.", "error");
+        },
+      });
     }
   };
 
@@ -154,7 +170,7 @@ export default function BooksPage() {
                           </td>
                         </tr>
                       ) : (
-                        filteredBooks.map((book, idx) => (
+                        filteredBooks.map((book) => (
                           <tr
                             key={book.id}
                             className="border-b border-gray-300"
@@ -211,8 +227,6 @@ export default function BooksPage() {
             setIsModalOpen(false);
             setEditingBook(null);
           }}
-          onSave={editingBook ? handleUpdateBook : handleAddBook}
-          books={books} // still needed for validation inside modal
         />
       )}
     </div>

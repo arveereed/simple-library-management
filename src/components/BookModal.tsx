@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 import type { BookType } from "../types";
 import { useAddBooks } from "../hooks/books/useAddBooks";
+import { useUpdateBook } from "../hooks/books/useUpdateBook";
 
 interface BookModalProps {
   book?: BookType | null;
   onClose: () => void;
-  onSave: (bookData: BookType) => void;
-  books: BookType[];
 }
 
-export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
+export const BookModal = ({ book, onClose }: BookModalProps) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [isbn, setIsbn] = useState("");
   const [location, setLocation] = useState("");
   const [status, setStatus] = useState<BookType["status"]>("Available");
 
+  // 📌 initialize fields when editing
   useEffect(() => {
     if (book) {
       setTitle(book.title);
@@ -25,27 +25,11 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
       setIsbn(book.isbn);
       setLocation(book.location);
       setStatus(book.status);
-    } else {
-      setTitle("");
-      setAuthor("");
-      setIsbn("");
-      setLocation("");
-      setStatus("Available");
     }
   }, [book]);
 
-  const {
-    mutate,
-    isPending,
-    isError: isMutationError,
-    isSuccess,
-  } = useAddBooks();
-
-  useEffect(() => {
-    if (isSuccess) {
-      onClose();
-    }
-  }, [isSuccess]);
+  const { mutate: addBookMutate, isPending: isAdding } = useAddBooks();
+  const { mutate: updateBookMutate, isPending: isUpdating } = useUpdateBook();
 
   const handleSubmit = () => {
     if (!title || !author || !isbn || !location) {
@@ -53,7 +37,28 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
       return;
     }
 
-    const bookData: BookType = {
+    // 🔵 UPDATE FLOW
+    if (book) {
+      const updatedData = {
+        id: book.id,
+        title,
+        author,
+        isbn,
+        location,
+        status,
+      };
+
+      updateBookMutate(
+        { id: book.id, updatedBook: updatedData },
+        {
+          onSuccess: () => onClose(),
+        }
+      );
+      return;
+    }
+
+    // 🟢 ADD FLOW
+    const newBook: BookType = {
       id: Date.now().toString(),
       title,
       author,
@@ -62,10 +67,9 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
       status,
     };
 
-    // add book in db firebase
-    mutate(bookData);
-
-    onSave(bookData);
+    addBookMutate(newBook, {
+      onSuccess: () => onClose(),
+    });
   };
 
   return (
@@ -90,6 +94,7 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
             onChange={(e) => setTitle(e.target.value)}
             className="w-full p-2 border rounded-md"
           />
+
           <input
             type="text"
             placeholder="Author"
@@ -97,6 +102,7 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
             onChange={(e) => setAuthor(e.target.value)}
             className="w-full p-2 border rounded-md"
           />
+
           <input
             type="text"
             placeholder="ISBN"
@@ -104,6 +110,7 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
             onChange={(e) => setIsbn(e.target.value)}
             className="w-full p-2 border rounded-md"
           />
+
           <input
             type="text"
             placeholder="Location"
@@ -124,24 +131,21 @@ export const BookModal = ({ book, onClose, onSave, books }: BookModalProps) => {
         </div>
 
         <div className="flex justify-end mt-6 gap-2">
-          <Button
-            className="cursor-pointer"
-            variant="secondary"
-            onClick={onClose}
-          >
+          <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
+
           <Button
-            className="cursor-pointer"
             onClick={handleSubmit}
-            disabled={isPending}
+            disabled={isAdding || isUpdating}
+            className="cursor-pointer disabled:bg-slate-600 disabled:animate-pulse"
           >
             {book
-              ? isPending
-                ? "Updating.."
+              ? isUpdating
+                ? "Updating..."
                 : "Update Book"
-              : isPending
-              ? "Adding.."
+              : isAdding
+              ? "Adding..."
               : "Add Book"}
           </Button>
         </div>

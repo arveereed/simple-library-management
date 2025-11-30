@@ -7,6 +7,7 @@ import {
   orderBy,
   query,
   Timestamp,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import type { BookType } from "../types";
@@ -53,14 +54,38 @@ export const getBooks = async () => {
   }
 };
 
+export const updateBookByField = async (id: string, updatedBook: BookType) => {
+  try {
+    const q = query(collection(db, "books"), where("id", "==", id));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) throw new Error("Book not found");
+
+    const updates = snapshot.docs.map((d) =>
+      updateDoc(doc(db, "books", d.id), updatedBook)
+    );
+    await Promise.all(updates);
+
+    return true;
+  } catch (error) {
+    console.error("Error updating book:", error);
+    return null;
+  }
+};
+
 export const deleteBookByField = async (id: string) => {
-  const q = query(collection(db, "books"), where("id", "==", id));
-  const snapshot = await getDocs(q);
+  try {
+    const q = query(collection(db, "books"), where("id", "==", id));
+    const snapshot = await getDocs(q);
 
-  if (snapshot.empty) return false;
+    if (snapshot.empty) throw new Error("Book not found");
 
-  const deletes = snapshot.docs.map((d) => deleteDoc(doc(db, "books", d.id)));
-  await Promise.all(deletes);
+    const deletes = snapshot.docs.map((d) => deleteDoc(doc(db, "books", d.id)));
+    await Promise.all(deletes);
 
-  return true;
+    return true;
+  } catch (error) {
+    console.error("Error deleting book:", error);
+    return null;
+  }
 };
