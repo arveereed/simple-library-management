@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 import type { StudentType } from "../types";
+import { useAddStudents } from "../hooks/students/useAddStudents";
+import { useUpdateStudent } from "../hooks/students/useUpdateStudent";
 
 interface StudentModalProps {
   student?: StudentType | null;
@@ -30,6 +32,10 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
     }
   }, [student]);
 
+  const { mutate: addBookMutate, isPending: isAdding } = useAddStudents();
+  const { mutate: updateStudentMutate, isPending: isUpdating } =
+    useUpdateStudent();
+
   const validate = () => {
     const newErrors = {
       name: name ? "" : "Full Name is required",
@@ -46,7 +52,7 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
 
     if (!validate()) return;
 
-    const data: StudentType = {
+    const studentData: StudentType = {
       id: student ? student.id : Date.now().toString(),
       name,
       studentId,
@@ -54,7 +60,14 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
       phone,
     };
 
-    // TODO: submit data
+    if (student) {
+      updateStudentMutate(
+        { id: student.id, updatedStudent: studentData },
+        { onSuccess: () => onClose() }
+      );
+    } else {
+      addBookMutate(studentData, { onSuccess: () => onClose() });
+    }
   };
 
   const inputClass = (field: string) =>
@@ -160,10 +173,17 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
             </Button>
 
             <Button
+              disabled={isAdding || isUpdating}
               weight="normal"
-              className="h-11 px-6 rounded-xl bg-black text-white cursor-pointer"
+              className="h-11 px-6 rounded-xl bg-black text-white cursor-pointer disabled:bg-neutral-400"
             >
-              {student ? "Update Student" : "Register Student"}
+              {student
+                ? isUpdating
+                  ? "Updating..."
+                  : "Update Student"
+                : isAdding
+                ? "Adding..."
+                : "Add Student"}
             </Button>
           </div>
         </form>

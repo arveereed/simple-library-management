@@ -10,7 +10,7 @@ import { useDeleteBook } from "../hooks/books/useDeleteBook";
 import Swal from "sweetalert2";
 
 export default function BooksPage() {
-  const { data: booksData, isLoading } = useBooks();
+  const { data: booksData = [], isLoading } = useBooks();
   const { mutate: deleteBookMutate, isPending: isDeleting } = useDeleteBook();
 
   const books: BookType[] = booksData ?? [];

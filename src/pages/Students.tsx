@@ -5,10 +5,13 @@ import { Card } from "../components/Card";
 import { CardContent } from "../components/CardContent";
 import StudentViewModal from "../components/StudentViewModal";
 import { StudentModal } from "../components/StudentModal";
-import type { StudentType } from "../types";
+import type { Student, StudentType } from "../types";
+import { useStudents } from "../hooks/students/useStudents";
+import { useDeleteStudent } from "../hooks/students/useDeleteStudent";
+import Swal from "sweetalert2";
 
 // TEMPORARY DATA
-const tempStudents = [
+/* const tempStudents = [
   {
     id: "1",
     name: "John Michael Cruz",
@@ -41,11 +44,16 @@ const tempStudents = [
       { title: "New World", due: "12/14/2025", status: "On time" },
     ],
   },
-];
+]; */
 
 export default function Students() {
-  const [students, setStudents] = useState(tempStudents);
-  const [filteredStudents, setFilteredStudents] = useState(tempStudents);
+  const { data: studentsData, isLoading } = useStudents();
+  const { mutate: deleteStudentMutate, isPending: isDeleting } =
+    useDeleteStudent();
+
+  const students: Student[] = studentsData ?? [];
+
+  const [filteredStudents, setFilteredStudents] = useState(students);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(
@@ -90,6 +98,37 @@ export default function Students() {
   // Open Add Modal
   const openAddModal = () => {
     setIsAddOpen(true);
+  };
+
+  const handleDeleteStudent = async (id: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: "Deleting...",
+        text: "Please wait",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      deleteStudentMutate(id, {
+        onSuccess: () => {
+          Swal.close(); // 🔥 CLOSE LOADING
+          Swal.fire("Deleted!", "Student has been removed.", "success");
+        },
+        onError: () => {
+          Swal.close();
+          Swal.fire("Error", "Failed to delete the student.", "error");
+        },
+      });
+    }
   };
 
   return (
@@ -201,7 +240,10 @@ export default function Students() {
                                 </button>
 
                                 {/* Delete */}
-                                <button className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer">
+                                <button
+                                  onClick={() => handleDeleteStudent(s.id)}
+                                  className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer"
+                                >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>

@@ -50,13 +50,14 @@ export default function Navbar_() {
             <div className="h-10 w-24 bg-gray-300 rounded-xl animate-pulse"></div>
           </div>
         ) : user ? (
-          <button
+          <Button
+            weight="normal"
             disabled={loading}
             onClick={handleSignOut}
-            className="disabled:bg-blue-300 cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-700 transition"
+            className="cursor-pointer px-4 py-2 "
           >
             Logout
-          </button>
+          </Button>
         ) : (
           <div className="flex items-center gap-4">
             <Link to="/login">

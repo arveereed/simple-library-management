@@ -247,7 +247,7 @@ export default function SignupForm() {
                 type="button"
                 disabled={isLoading}
                 onClick={onSignUpPress}
-                className="cursor-pointer w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md disabled:bg-blue-300"
+                className="bg-black text-white hover:bg-neutral-800 shadow-sm hover:shadow-md  cursor-pointer w-full py-3 px-4 text-sm font-medium rounded-md disabled:bg-neutral-400 "
               >
                 {isLoading ? "Loading..." : "Create an account"}
               </button>

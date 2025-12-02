@@ -15,9 +15,9 @@ import { db } from "../config/firebase";
 
 export const addBook = async (book: BookType) => {
   try {
-    const usersCollection = collection(db, "books");
+    const booksCollection = collection(db, "books");
 
-    await addDoc(usersCollection, {
+    await addDoc(booksCollection, {
       ...book,
       createdAt: Timestamp.now(),
     });

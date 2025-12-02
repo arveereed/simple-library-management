@@ -169,7 +169,7 @@ export default function LoginForm() {
                   disabled={isLoading}
                   onClick={onSignInPress}
                   type="button"
-                  className="disabled:bg-blue-300 w-full py-2 px-4 text-[15px] font-medium tracking-wide rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none cursor-pointer"
+                  className="bg-black text-white hover:bg-neutral-800 shadow-sm hover:shadow-md   disabled:disabled:bg-neutral-400  w-full py-2 px-4 text-[15px] font-medium tracking-wide rounded-md  focus:outline-none cursor-pointer"
                 >
                   {isLoading ? "Loading..." : "Sign in"}
                 </button>
