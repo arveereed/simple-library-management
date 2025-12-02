@@ -1,3 +1,5 @@
+import type { Timestamp } from "firebase/firestore";
+
 export type UserDataSignUpType = {
   user_id: string;
   fullname: string;
@@ -35,6 +37,7 @@ export interface Student {
     title: string;
     due: string;
     status: string;
+    createdAt: Timestamp;
   }[];
 }
 
@@ -44,4 +47,14 @@ export interface StudentType {
   studentId: string;
   email: string;
   phone: string;
+}
+
+export interface TransactionType {
+  id: string;
+  bookId: string;
+  bookTitle: string;
+  studentName: string;
+  checkoutDate: string;
+  dueDate: string;
+  student_user_id: string;
 }

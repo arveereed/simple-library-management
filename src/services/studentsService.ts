@@ -11,7 +11,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
-import type { Student, StudentType } from "../types";
+import type { StudentType } from "../types";
 
 export const addStudent = async (student: StudentType) => {
   try {

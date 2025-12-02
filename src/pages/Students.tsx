@@ -10,42 +10,6 @@ import { useStudents } from "../hooks/students/useStudents";
 import { useDeleteStudent } from "../hooks/students/useDeleteStudent";
 import Swal from "sweetalert2";
 
-// TEMPORARY DATA
-/* const tempStudents = [
-  {
-    id: "1",
-    name: "John Michael Cruz",
-    studentId: "2023-00123",
-    email: "john.cruz@example.com",
-    phone: "09123456789",
-    history: [],
-  },
-  {
-    id: "2",
-    name: "Angelica Santos",
-    studentId: "2023-00456",
-    email: "angelica.santos@example.com",
-    phone: "09987654321",
-    history: [
-      { title: "As The Gods Will", due: "12/8/2025", status: "On time" },
-      { title: "New World", due: "12/14/2025", status: "On time" },
-      { title: "New World", due: "12/14/2025", status: "On time" },
-      { title: "New World", due: "12/14/2025", status: "On time" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Mark Joseph Dela Rosa",
-    studentId: "2022-00987",
-    email: "mark.delarosa@example.com",
-    phone: "09351234567",
-    history: [
-      { title: "As The Gods Will", due: "12/8/2025", status: "On time" },
-      { title: "New World", due: "12/14/2025", status: "On time" },
-    ],
-  },
-]; */
-
 export default function Students() {
   const { data: studentsData, isLoading } = useStudents();
   const { mutate: deleteStudentMutate, isPending: isDeleting } =
@@ -56,9 +20,7 @@ export default function Students() {
   const [filteredStudents, setFilteredStudents] = useState(students);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [selectedStudent, setSelectedStudent] = useState<StudentType | null>(
-    null
-  );
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
 
   // Add Modal
@@ -84,7 +46,7 @@ export default function Students() {
   }, [searchTerm, students]);
 
   // Open View Modal
-  const openViewModal = (s: StudentType) => {
+  const openViewModal = (s: Student) => {
     setSelectedStudent(s);
     setIsViewOpen(true);
   };
@@ -183,7 +145,31 @@ export default function Students() {
                     </thead>
 
                     <tbody className="bg-white text-base">
-                      {filteredStudents.length === 0 ? (
+                      {isLoading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <tr
+                            key={i}
+                            className="border-b border-gray-300 animate-pulse"
+                          >
+                            {["w-40", "w-32", "w-28", "w-28", "w-20"].map(
+                              (w, idx) => (
+                                <td key={idx} className="p-4">
+                                  <div
+                                    className={`h-4 bg-gray-200 dark:bg-gray-300 rounded-md ${w}`}
+                                  />
+                                </td>
+                              )
+                            )}
+
+                            <td className="p-4">
+                              <div className="flex justify-end items-center gap-3">
+                                <div className="h-6 w-6 bg-gray-200 rounded-md"></div>
+                                <div className="h-6 w-6 bg-gray-200 rounded-md"></div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : filteredStudents.length === 0 ? (
                         <tr>
                           <td
                             colSpan={5}

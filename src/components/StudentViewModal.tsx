@@ -1,23 +1,11 @@
 import { X } from "lucide-react";
 import { Button } from "./Button";
-
-type BorrowHistory = {
-  title: string;
-  due: string;
-  status: "On time" | "Late";
-};
+import type { Student } from "../types";
 
 interface StudentViewModalProps {
   open: boolean;
   onClose: () => void;
-  student: {
-    id: string;
-    name: string;
-    studentId: string;
-    email: string;
-    phone: string;
-    history?: BorrowHistory[];
-  } | null;
+  student: Student | null;
 }
 
 export default function StudentViewModal({
@@ -26,6 +14,12 @@ export default function StudentViewModal({
   student,
 }: StudentViewModalProps) {
   if (!open || !student) return null;
+
+  const sortedHistory = student.history.sort(
+    (a, b) =>
+      new Date(b.createdAt.toDate()).getTime() -
+      new Date(a.createdAt.toDate()).getTime()
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -62,8 +56,8 @@ export default function StudentViewModal({
           <p className="font-semibold text-xl mb-3">Borrowing History</p>
 
           <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-            {student.history?.length ? (
-              student.history.map((item, index) => (
+            {sortedHistory?.length ? (
+              sortedHistory.map((item, index) => (
                 <div
                   key={index}
                   className="p-4 bg-gray-100 rounded-lg flex justify-between items-center"
@@ -88,7 +82,7 @@ export default function StudentViewModal({
 
         {/* Close Button */}
         <Button
-          className="w-full cursor-pointer flex justify-center py-3"
+          className="w-full cursor-pointer flex justify-center py-3 mt-4"
           weight="normal"
           onClick={onClose}
         >

@@ -1,270 +1,225 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Button } from "../components/Button";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Card } from "../components/Card";
+import { useBooks } from "../hooks/books/useBooks";
+import type { BookType, Student, TransactionType } from "../types";
+import { useStudents } from "../hooks/students/useStudents";
+import { useAddTransaction } from "../hooks/transactions/useAddTransaction";
+import { useTransactions } from "../hooks/transactions/useTransactions";
+import { useRemovetransaction } from "../hooks/transactions/useRemoveTransaction";
 
-type Book = {
-  id: string;
-  title: string;
-  author: string;
-};
+export default function TransactionsPage() {
+  const { data: booksData = [], isLoading: isLoadingBooks } = useBooks();
+  const { data: studentsData, isLoading: isLoadingStudents } = useStudents();
+  const { data: activeRecordsData, isLoading: isLoadingActiveRecords } =
+    useTransactions();
 
-const books: Book[] = [
-  {
-    id: "to-kill-a-mockingbird",
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
-  },
-  { id: "1984", title: "1984", author: "George Orwell" },
-  {
-    id: "the-great-gatsby",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-  },
-];
+  console.log("activeRecordsData: ", activeRecordsData);
 
-type BorrowRecord = {
-  studentId: string;
-  studentName: string;
-  bookTitle: string;
-  author: string;
-  dueDate: string;
-};
+  const books: BookType[] = booksData ?? [];
+  const students: Student[] = studentsData ?? [];
+  const activeRecords: TransactionType[] = activeRecordsData ?? [];
 
-const Transactions: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [openRecord, setOpenRecord] = useState<string | null>(null);
 
-  const [selectedBookId, setSelectedBookId] = useState<string>("");
-  const [studentId, setStudentId] = useState<string>("");
-  const [studentName, setStudentName] = useState<string>("");
+  // ----- ACTIVE BORROWING STATE -----
+  // const [activeRecords, setActiveRecords] = useState<TransactionType[]>([]);
 
-  const [dueWeeks, setDueWeeks] = useState<string>("");
-  const [dueDate, setDueDate] = useState<string>("");
-
-  const [records, setRecords] = useState<BorrowRecord[]>([]);
-
-  const selectedBook = books.find((b) => b.id === selectedBookId);
-
-  const handleOpenModal = () => setIsModalOpen(true);
-
-  const resetForm = () => {
-    setSelectedBookId("");
-    setStudentId("");
-    setStudentName("");
-    setDueWeeks("");
-    setDueDate("");
+  const toggleRecord = (id: string) => {
+    setOpenRecord((prev) => (prev === id ? null : id));
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    resetForm();
-  };
+  const { mutate: addTransactionMutate, isPending: isAdding } =
+    useAddTransaction();
+  const { mutate: removeTransactionMutate, isPending: isRemoving } =
+    useRemovetransaction();
 
-  const handleDueWeeksChange = (value: string) => {
-    setDueWeeks(value);
-
-    const weeks = parseInt(value, 10);
-    if (!weeks || Number.isNaN(weeks)) {
-      setDueDate("");
+  // ====== PROCESS CHECKOUT ======
+  const handleCheckout = () => {
+    if (!selectedBook || !selectedStudent) {
+      alert("Please select both a book and a student.");
       return;
     }
 
-    const today = new Date();
-    const due = new Date(today);
-    due.setDate(today.getDate() + weeks * 7);
+    const book = books.find((b) => b.id === selectedBook);
+    const student = students.find((s) => s.id === selectedStudent);
 
-    setDueDate(due.toISOString().split("T")[0]);
-  };
+    if (!book || !student) return;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedBook || !dueDate) return;
-
-    const newRecord: BorrowRecord = {
-      studentId,
-      studentName,
-      bookTitle: selectedBook.title,
-      author: selectedBook.author,
-      dueDate,
+    const newRecord: TransactionType = {
+      id: Date.now().toString(),
+      bookId: book.id,
+      bookTitle: book.title,
+      studentName: student.name,
+      checkoutDate: new Date().toLocaleDateString(),
+      dueDate: new Date(
+        Date.now() + 14 * 24 * 60 * 60 * 1000
+      ).toLocaleDateString(), // 14 days
+      student_user_id: student.id,
     };
 
-    setRecords((prev) => [...prev, newRecord]);
+    // setActiveRecords((prev) => [...prev, newRecord]); // Add record
+    addTransactionMutate(newRecord, {
+      onSuccess: () => {
+        // Reset fields
+        setSelectedBook("");
+        setSelectedStudent("");
 
-    handleCloseModal();
+        // Close the card
+        setIsOpen(false);
+      },
+    });
+  };
+
+  // ====== RETURN BOOK ======
+  const handleReturn = (id: string, transaction: TransactionType) => {
+    // setActiveRecords((prev) => prev.filter((r) => r.id !== recordId));
+    removeTransactionMutate({ id, transaction });
   };
 
   return (
-    <div className="p-8 w-full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Transactions</h1>
-          <p className="text-xl text-gray-500">Manage checkouts and returns</p>
-        </div>
+    <div className="flex h-screen bg-background w-full">
+      <main className="flex-1 overflow-auto">
+        <div className="p-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-4xl font-bold">Transactions</h1>
+              <p className="text-xl mt-2 text-gray-500">
+                Manage checkouts and returns
+              </p>
+            </div>
 
-        <button
-          onClick={handleOpenModal}
-          className="bg-black text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 text-sm"
-        >
-          <span className="text-xl font-semibold">+</span>
-          Checkout Book
-        </button>
-      </div>
-
-      <div className="border rounded-lg p-4 min-h-[150px]">
-        <h2 className="font-semibold text-2xl">Active Borrowing Records</h2>
-        <p className="text-md text-gray-500 mb-4">
-          Currently checked out books
-        </p>
-
-        {records.length > 0 ? (
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="p-3">Student ID</th>
-                <th className="p-3">Student Name</th>
-                <th className="p-3">Book Title</th>
-                <th className="p-3">Author</th>
-                <th className="p-3">Due Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((rec, index) => (
-                <tr key={index} className="border-b -10 hover:bg-gray-50">
-                  <td className="p-4">{rec.studentId}</td>
-                  <td className="p-4">{rec.studentName}</td>
-                  <td className="p-4">{rec.bookTitle}</td>
-                  <td className="p-4">{rec.author}</td>
-                  <td className="p-4">
-                    {new Date(rec.dueDate).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="flex justify-center items-center text-gray-400 text-sm h-20">
-            No active borrowing records
-          </div>
-        )}
-      </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6 relative">
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-gray-500 hover:text-black text-3xl"
-              aria-label="Close"
+            <Button
+              onClick={() => setIsOpen((prev) => !prev)}
+              className="gap-2 cursor-pointer"
             >
-              ×
-            </button>
-
-            <h2 className="text-3xl font-bold mb-4">Checkout Book</h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Book <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedBookId}
-                  onChange={(e) => setSelectedBookId(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/70"
-                  required
-                >
-                  <option value="">Select a book</option>
-                  {books.map((book) => (
-                    <option key={book.id} value={book.id}>
-                      {book.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-md font-semibold mb-1">
-                  Author <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={selectedBook ? selectedBook.author : ""}
-                  readOnly
-                  className="w-full border-gray-300 border rounded-xl px-3 py-3 text-sm bg-gray-100 cursor-not-allowed"
-                  placeholder="Author will appear here"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Student ID <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/70"
-                  placeholder="e.g., STU-001"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Student Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/70"
-                  placeholder="Student name"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Due Date <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={dueWeeks}
-                  onChange={(e) => handleDueWeeksChange(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/70"
-                  required
-                >
-                  <option value="">Select due date</option>
-                  <option value="1">1 week</option>
-                  <option value="2">2 weeks</option>
-                  <option value="3">3 weeks</option>
-                  <option value="4">4 weeks</option>
-                </select>
-                {dueDate && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Due on: {new Date(dueDate).toLocaleDateString()}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-5 py-2 rounded-xl font-semibold border border-gray-300 text-sm bg-gray-100 hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-7 py-3 rounded-xl font-semibold bg-black text-white text-sm hover:bg-black/90"
-                >
-                  Checkout Book
-                </button>
-              </div>
-            </form>
+              <Plus className="w-4 h-4" />
+              Checkout Book
+            </Button>
           </div>
+
+          {/* Checkout panel */}
+          {isOpen && (
+            <Card className="p-6 mb-10">
+              <h2 className="text-xl font-semibold mb-1">New Checkout</h2>
+              <p className="text-gray-500 mb-6">
+                Process a book checkout transaction
+              </p>
+
+              <div className="space-y-4">
+                {/* Book */}
+                <div>
+                  <label className="block font-medium mb-1">
+                    Select Book *
+                  </label>
+                  <select
+                    className="w-full h-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none px-3 py-2 text-lg cursor-pointer"
+                    value={selectedBook}
+                    onChange={(e) => setSelectedBook(e.target.value)}
+                  >
+                    <option value="">Choose a book...</option>
+                    {books.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Student */}
+                <div>
+                  <label className="block font-medium mb-1">
+                    Select Student *
+                  </label>
+                  <select
+                    className="w-full h-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none px-3 py-2 text-lg cursor-pointer"
+                    value={selectedStudent}
+                    onChange={(e) => setSelectedStudent(e.target.value)}
+                  >
+                    <option value="">Choose a student...</option>
+                    {students.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.studentId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Checkout */}
+                <Button
+                  weight="normal"
+                  onClick={handleCheckout}
+                  disabled={isAdding}
+                  className="w-full py-3 hover:bg-neutral-300 cursor-pointer items-center justify-center disabled:bg-neutral-400"
+                >
+                  {isAdding ? "Checking out..." : "Process Checkout"}
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Active Borrowing Records */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-1">
+              Active Borrowing Records
+            </h2>
+            <p className="text-gray-600 mb-6">Currently checked out books</p>
+
+            {activeRecords.length === 0 ? (
+              <div className="text-center text-gray-500 py-8 text-lg">
+                No active borrowing records
+              </div>
+            ) : (
+              activeRecords.map((record) => (
+                <div key={record.id} className="border-b border-gray-300">
+                  <div
+                    className="flex justify-between p-4 cursor-pointer"
+                    onClick={() => toggleRecord(record.id)}
+                  >
+                    <div>
+                      <p className="font-semibold text-xl">
+                        {record.bookTitle}
+                      </p>
+                      <p className="text-base">Student: {record.studentName}</p>
+                      <p className="text-sm text-gray-600">
+                        Checkout: {record.checkoutDate}
+                        <span className="ml-3 text-green-600">
+                          Due: {record.dueDate}
+                        </span>
+                      </p>
+                    </div>
+
+                    {openRecord === record.id ? (
+                      <ChevronUp className="h-5 w-5" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5" />
+                    )}
+                  </div>
+
+                  {openRecord === record.id && (
+                    <div className="p-4 bg-gray-50">
+                      <Button
+                        disabled={isRemoving}
+                        onClick={() => handleReturn(record.id, record)}
+                        className="w-full py-3 cursor-pointer items-center justify-center disabled:bg-neutral-400"
+                      >
+                        {isRemoving
+                          ? "Returning Book..."
+                          : "✓ Check In / Return Book"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </Card>
         </div>
-      )}
+      </main>
     </div>
   );
-};
-
-export default Transactions;
+}
