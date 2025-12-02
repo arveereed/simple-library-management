@@ -61,10 +61,7 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
     };
 
     if (student) {
-      updateStudentMutate(
-        { id: student.id, updatedStudent: studentData },
-        { onSuccess: () => onClose() }
-      );
+      updateStudentMutate(studentData, { onSuccess: () => onClose() });
     } else {
       addBookMutate(studentData, { onSuccess: () => onClose() });
     }

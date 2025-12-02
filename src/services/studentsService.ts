@@ -56,24 +56,23 @@ export const getStudents = async () => {
 };
 
 export const updateStudentByField = async (
-  id: string,
-  updatedStudent: { updatedStudent: StudentType }
-) => {
+  updatedStudent: StudentType
+): Promise<void> => {
   try {
-    const q = query(collection(db, "students"), where("id", "==", id));
+    const q = query(
+      collection(db, "students"),
+      where("id", "==", updatedStudent.id)
+    );
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) throw new Error("Student not found");
 
     const updates = snapshot.docs.map((d) =>
-      updateDoc(doc(db, "students", d.id), updatedStudent)
+      updateDoc(doc(db, "students", d.id), { ...updatedStudent })
     );
     await Promise.all(updates);
-
-    return true;
   } catch (error) {
     console.error("Error updating book:", error);
-    return null;
   }
 };
 

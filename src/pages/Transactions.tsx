@@ -15,8 +15,6 @@ export default function TransactionsPage() {
   const { data: activeRecordsData, isLoading: isLoadingActiveRecords } =
     useTransactions();
 
-  console.log("activeRecordsData: ", activeRecordsData);
-
   const books: BookType[] = booksData ?? [];
   const students: Student[] = studentsData ?? [];
   const activeRecords: TransactionType[] = activeRecordsData ?? [];

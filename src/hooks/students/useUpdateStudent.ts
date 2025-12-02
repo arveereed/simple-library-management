@@ -1,19 +1,13 @@
 // hooks/useUpdateUser.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { StudentType } from "../../types";
+import type { Student, StudentType } from "../../types";
 import { updateStudentByField } from "../../services/studentsService";
 
 export function useUpdateStudent() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({
-      id,
-      updatedStudent,
-    }: {
-      id: string;
-      updatedStudent: StudentType;
-    }) => updateStudentByField(id, updatedStudent),
+  return useMutation<void, Error, StudentType>({
+    mutationFn: (studentData) => updateStudentByField(studentData),
 
     // optional: automatically refetch the books list
     onSuccess: () => {
