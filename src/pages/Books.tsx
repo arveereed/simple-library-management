@@ -8,8 +8,11 @@ import type { BookType } from "../types";
 import { useBooks } from "../hooks/books/useBooks";
 import { useDeleteBook } from "../hooks/books/useDeleteBook";
 import Swal from "sweetalert2";
+import { useUserContext } from "../contexts/UserContext";
 
 export default function BooksPage() {
+  const { user, isLoading: isLoadingUser } = useUserContext();
+
   const { data: booksData = [], isLoading } = useBooks();
   const { mutate: deleteBookMutate, isPending: isDeleting } = useDeleteBook();
 
@@ -91,16 +94,18 @@ export default function BooksPage() {
               </p>
             </div>
 
-            <Button
-              onClick={() => {
-                setEditingBook(null);
-                setIsModalOpen(true);
-              }}
-              className="gap-2 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Add New Book
-            </Button>
+            {user && (
+              <Button
+                onClick={() => {
+                  setEditingBook(null);
+                  setIsModalOpen(true);
+                }}
+                className="gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                Add New Book
+              </Button>
+            )}
           </div>
 
           {/* Search */}
@@ -129,9 +134,11 @@ export default function BooksPage() {
                           Location
                         </th>
                         <th className="text-left p-4 font-semibold">Status</th>
-                        <th className="text-right p-4 font-semibold">
-                          Actions
-                        </th>
+                        {user && (
+                          <th className="text-right p-4 font-semibold">
+                            Actions
+                          </th>
+                        )}
                       </tr>
                     </thead>
 
@@ -188,26 +195,28 @@ export default function BooksPage() {
                                 {book.status}
                               </span>
                             </td>
-                            <td className="p-4">
-                              <div className="flex justify-end items-center gap-3">
-                                <button
-                                  onClick={() => {
-                                    setEditingBook(book);
-                                    setIsModalOpen(true);
-                                  }}
-                                  className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
+                            {user && (
+                              <td className="p-4">
+                                <div className="flex justify-end items-center gap-3">
+                                  <button
+                                    onClick={() => {
+                                      setEditingBook(book);
+                                      setIsModalOpen(true);
+                                    }}
+                                    className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
 
-                                <button
-                                  onClick={() => handleDeleteBook(book.id)}
-                                  className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
+                                  <button
+                                    onClick={() => handleDeleteBook(book.id)}
+                                    className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                       )}

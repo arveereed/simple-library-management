@@ -9,8 +9,11 @@ import type { Student, StudentType } from "../types";
 import { useStudents } from "../hooks/students/useStudents";
 import { useDeleteStudent } from "../hooks/students/useDeleteStudent";
 import Swal from "sweetalert2";
+import { useUserContext } from "../contexts/UserContext";
 
 export default function Students() {
+  const { user, isLoading: isLoadingUser } = useUserContext();
+
   const { data: studentsData, isLoading } = useStudents();
   const { mutate: deleteStudentMutate, isPending: isDeleting } =
     useDeleteStudent();
@@ -108,9 +111,11 @@ export default function Students() {
               </p>
             </div>
 
-            <Button className="gap-2 cursor-pointer" onClick={openAddModal}>
-              <Plus className="w-4 h-4" /> Register Student
-            </Button>
+            {user && (
+              <Button className="gap-2 cursor-pointer" onClick={openAddModal}>
+                <Plus className="w-4 h-4" /> Register Student
+              </Button>
+            )}
           </div>
 
           {/* Search */}
@@ -138,9 +143,11 @@ export default function Students() {
                         </th>
                         <th className="text-left p-4 font-semibold">Email</th>
                         <th className="text-left p-4 font-semibold">Phone</th>
-                        <th className="text-right p-4 font-semibold">
-                          Actions
-                        </th>
+                        {user && (
+                          <th className="text-right p-4 font-semibold">
+                            Actions
+                          </th>
+                        )}
                       </tr>
                     </thead>
 
@@ -186,54 +193,56 @@ export default function Students() {
                             <td className="p-4">{s.email}</td>
                             <td className="p-4">{s.phone}</td>
 
-                            <td className="p-4">
-                              <div className="flex justify-end items-center gap-3">
-                                {/* View */}
-                                <button
-                                  className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
-                                  onClick={() => openViewModal(s)}
-                                >
-                                  {" "}
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                            {user && (
+                              <td className="p-4">
+                                <div className="flex justify-end items-center gap-3">
+                                  {/* View */}
+                                  <button
+                                    className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
+                                    onClick={() => openViewModal(s)}
                                   >
                                     {" "}
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />{" "}
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                    />{" "}
-                                  </svg>{" "}
-                                </button>
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      {" "}
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                      />{" "}
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                      />{" "}
+                                    </svg>{" "}
+                                  </button>
 
-                                {/* Edit */}
-                                <button
-                                  onClick={() => openEditModal(s)}
-                                  className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
+                                  {/* Edit */}
+                                  <button
+                                    onClick={() => openEditModal(s)}
+                                    className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
 
-                                {/* Delete */}
-                                <button
-                                  onClick={() => handleDeleteStudent(s.id)}
-                                  className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
+                                  {/* Delete */}
+                                  <button
+                                    onClick={() => handleDeleteStudent(s.id)}
+                                    className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                       )}

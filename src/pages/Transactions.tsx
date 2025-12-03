@@ -8,8 +8,11 @@ import { useAddTransaction } from "../hooks/transactions/useAddTransaction";
 import { useTransactions } from "../hooks/transactions/useTransactions";
 import { useRemovetransaction } from "../hooks/transactions/useRemoveTransaction";
 import { useAvailableBooks } from "../hooks/books/useAvailableBooks";
+import { useUserContext } from "../contexts/UserContext";
 
 export default function TransactionsPage() {
+  const { user, isLoading: isLoadingUser } = useUserContext();
+
   const { data: booksData = [], isLoading: isLoadingBooks } =
     useAvailableBooks();
   const { data: studentsData, isLoading: isLoadingStudents } = useStudents();
@@ -88,13 +91,15 @@ export default function TransactionsPage() {
               </p>
             </div>
 
-            <Button
-              onClick={() => setIsOpen((prev) => !prev)}
-              className="gap-2 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Checkout Book
-            </Button>
+            {user && (
+              <Button
+                onClick={() => setIsOpen((prev) => !prev)}
+                className="gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                Checkout Book
+              </Button>
+            )}
           </div>
 
           {/* Checkout panel */}
@@ -197,15 +202,21 @@ export default function TransactionsPage() {
 
                   {openRecord === record.id && (
                     <div className="p-4 bg-gray-50">
-                      <Button
-                        disabled={isRemoving}
-                        onClick={() => handleReturn(record.id, record)}
-                        className="w-full py-3 cursor-pointer items-center justify-center disabled:bg-neutral-400"
-                      >
-                        {isRemoving
-                          ? "Returning Book..."
-                          : "✓ Check In / Return Book"}
-                      </Button>
+                      {user ? (
+                        <Button
+                          disabled={isRemoving}
+                          onClick={() => handleReturn(record.id, record)}
+                          className="w-full py-3 cursor-pointer items-center justify-center disabled:bg-neutral-400"
+                        >
+                          {isRemoving
+                            ? "Returning Book..."
+                            : "✓ Check In / Return Book"}
+                        </Button>
+                      ) : (
+                        <div className="text-xl text-center font-medium text-gray-500">
+                          Login first
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
