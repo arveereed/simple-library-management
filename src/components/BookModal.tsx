@@ -161,7 +161,7 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
           </div>
 
           {/** Status */}
-          <div className="flex flex-col">
+          {/* <div className="flex flex-col">
             <label className="text-sm font-semibold mb-1">Status</label>
             <select
               value={status}
@@ -172,7 +172,7 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
               <option value="Checked Out">Checked Out</option>
               <option value="Overdue">Overdue</option>
             </select>
-          </div>
+          </div> */}
 
           {/** Buttons */}
           <div className="flex justify-end mt-8 gap-3">

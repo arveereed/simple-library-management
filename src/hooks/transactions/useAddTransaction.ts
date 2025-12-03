@@ -11,6 +11,7 @@ export const useAddTransaction = () => {
     onSuccess: () => {
       // Refresh books list after adding
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["booksAvailable"] });
     },
     onError: (err) => {
       console.error("Error adding transaction:", err);

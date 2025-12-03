@@ -15,6 +15,19 @@ import { db } from "../config/firebase";
 
 export const addTransaction = async (transaction: TransactionType) => {
   try {
+    const q = query(
+      collection(db, "books"),
+      where("id", "==", transaction.bookId)
+    );
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) throw new Error("Book not found");
+
+    const updates = snapshot.docs.map((docSnap) =>
+      updateDoc(doc(db, "books", docSnap.id), { status: "Checked Out" })
+    );
+    await Promise.all(updates);
+
     const transactionCollection = collection(db, "transactions");
 
     await addDoc(transactionCollection, {
@@ -60,6 +73,19 @@ export const removeTransactionByField = async (
   transaction: TransactionType
 ) => {
   try {
+    const bookQuery = query(
+      collection(db, "books"),
+      where("id", "==", transaction.bookId)
+    );
+    const bookSnapshot = await getDocs(bookQuery);
+
+    if (bookSnapshot.empty) throw new Error("Book not found");
+
+    const updates = bookSnapshot.docs.map((docSnap) =>
+      updateDoc(doc(db, "books", docSnap.id), { status: "Available" })
+    );
+    await Promise.all(updates);
+
     const studQuery = query(
       collection(db, "students"),
       where("id", "==", transaction.student_user_id)

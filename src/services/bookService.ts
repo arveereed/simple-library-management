@@ -26,7 +26,7 @@ export const addBook = async (book: BookType) => {
   }
 };
 
-export const getBooks = async () => {
+export const getBooks = async (): Promise<BookType[] | null> => {
   try {
     const booksCollection = collection(db, "books");
     const q = query(booksCollection, orderBy("createdAt", "desc"));
@@ -43,13 +43,46 @@ export const getBooks = async () => {
           location: data.location,
           status: data.status,
         };
-      });
+      }) as BookType[];
     }
 
     console.warn(`No books found`);
     return null;
   } catch (error) {
     console.error("Error fetching all books:", error);
+    return null;
+  }
+};
+
+export const getAvailableBooks = async () => {
+  try {
+    const booksCollection = collection(db, "books");
+    const q = query(
+      booksCollection,
+      where("status", "==", "Available"),
+      orderBy("createdAt", "desc")
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: data.id,
+          title: data.title,
+          author: data.author,
+          isbn: data.isbn,
+          location: data.location,
+          status: data.status,
+        };
+      }) as BookType[];
+    }
+
+    console.warn(`No books found`);
+    return null;
+  } catch (error) {
+    console.error("Error fetching available books:", error);
     return null;
   }
 };

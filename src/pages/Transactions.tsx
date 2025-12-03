@@ -8,9 +8,11 @@ import { useStudents } from "../hooks/students/useStudents";
 import { useAddTransaction } from "../hooks/transactions/useAddTransaction";
 import { useTransactions } from "../hooks/transactions/useTransactions";
 import { useRemovetransaction } from "../hooks/transactions/useRemoveTransaction";
+import { useAvailableBooks } from "../hooks/books/useAvailableBooks";
 
 export default function TransactionsPage() {
-  const { data: booksData = [], isLoading: isLoadingBooks } = useBooks();
+  const { data: booksData = [], isLoading: isLoadingBooks } =
+    useAvailableBooks();
   const { data: studentsData, isLoading: isLoadingStudents } = useStudents();
   const { data: activeRecordsData, isLoading: isLoadingActiveRecords } =
     useTransactions();
@@ -23,9 +25,6 @@ export default function TransactionsPage() {
   const [selectedStudent, setSelectedStudent] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [openRecord, setOpenRecord] = useState<string | null>(null);
-
-  // ----- ACTIVE BORROWING STATE -----
-  // const [activeRecords, setActiveRecords] = useState<TransactionType[]>([]);
 
   const toggleRecord = (id: string) => {
     setOpenRecord((prev) => (prev === id ? null : id));
@@ -60,7 +59,6 @@ export default function TransactionsPage() {
       student_user_id: student.id,
     };
 
-    // setActiveRecords((prev) => [...prev, newRecord]); // Add record
     addTransactionMutate(newRecord, {
       onSuccess: () => {
         // Reset fields
@@ -75,7 +73,6 @@ export default function TransactionsPage() {
 
   // ====== RETURN BOOK ======
   const handleReturn = (id: string, transaction: TransactionType) => {
-    // setActiveRecords((prev) => prev.filter((r) => r.id !== recordId));
     removeTransactionMutate({ id, transaction });
   };
 
