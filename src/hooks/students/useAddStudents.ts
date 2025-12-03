@@ -10,6 +10,7 @@ export const useAddStudents = () => {
     onSuccess: () => {
       // Refresh students list after adding
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (err) => {
       console.error("Error adding student:", err);

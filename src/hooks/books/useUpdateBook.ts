@@ -13,6 +13,7 @@ export function useUpdateBook() {
     // optional: automatically refetch the books list
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["books"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "../components/Button";
 import { Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { Card } from "../components/Card";
-import { useBooks } from "../hooks/books/useBooks";
 import type { BookType, Student, TransactionType } from "../types";
 import { useStudents } from "../hooks/students/useStudents";
 import { useAddTransaction } from "../hooks/transactions/useAddTransaction";

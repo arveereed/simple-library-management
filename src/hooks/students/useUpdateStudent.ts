@@ -12,6 +12,7 @@ export function useUpdateStudent() {
     // optional: automatically refetch the books list
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

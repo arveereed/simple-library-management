@@ -16,6 +16,7 @@ export const useRemovetransaction = () => {
     onSuccess: () => {
       // Refresh the transactions list after deletion
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 };

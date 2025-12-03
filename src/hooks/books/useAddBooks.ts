@@ -10,6 +10,7 @@ export const useAddBooks = () => {
     onSuccess: () => {
       // Refresh books list after adding
       queryClient.invalidateQueries({ queryKey: ["books"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (err) => {
       console.error("Error adding book:", err);

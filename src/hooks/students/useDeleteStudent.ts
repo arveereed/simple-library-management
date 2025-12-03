@@ -9,6 +9,7 @@ export const useDeleteStudent = () => {
     onSuccess: () => {
       // Refresh the books list after deletion
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 };
