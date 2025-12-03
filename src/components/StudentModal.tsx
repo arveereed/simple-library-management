@@ -33,8 +33,8 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
   }, [student]);
 
   const { mutate: addBookMutate, isPending: isAdding } = useAddStudents();
-  const { mutate: updateStudentMutate, isPending: isUpdating } =
-    useUpdateStudent();
+  // const { mutate: updateStudentMutate, isPending: isUpdating } =
+  //   useUpdateStudent();
 
   const validate = () => {
     const newErrors = {
@@ -61,7 +61,7 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
     };
 
     if (student) {
-      updateStudentMutate(studentData, { onSuccess: () => onClose() });
+      // updateStudentMutate(studentData, { onSuccess: () => onClose() });
     } else {
       addBookMutate(studentData, { onSuccess: () => onClose() });
     }
@@ -170,14 +170,14 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
             </Button>
 
             <Button
-              disabled={isAdding || isUpdating}
+              disabled={isAdding /* || isUpdating */}
               weight="normal"
               className="h-11 px-6 rounded-xl bg-black text-white cursor-pointer disabled:bg-neutral-400"
             >
               {student
-                ? isUpdating
+                ? /* isUpdating
                   ? "Updating..."
-                  : "Update Student"
+                  : "Update Student" */ ""
                 : isAdding
                 ? "Adding..."
                 : "Add Student"}

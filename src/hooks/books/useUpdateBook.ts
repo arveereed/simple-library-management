@@ -7,8 +7,7 @@ export function useUpdateBook() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, updatedBook }: { id: string; updatedBook: BookType }) =>
-      updateBookByField(id, updatedBook),
+    mutationFn: (updatedBook: BookType) => updateBookByField(updatedBook),
 
     // optional: automatically refetch the books list
     onSuccess: () => {

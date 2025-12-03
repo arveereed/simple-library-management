@@ -87,9 +87,9 @@ export const getAvailableBooks = async () => {
   }
 };
 
-export const updateBookByField = async (id: string, updatedBook: BookType) => {
+export const updateBookByField = async (updatedBook: BookType) => {
   try {
-    const q = query(collection(db, "books"), where("id", "==", id));
+    const q = query(collection(db, "books"), where("id", "==", updatedBook.id));
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) throw new Error("Book not found");

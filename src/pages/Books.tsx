@@ -9,6 +9,7 @@ import { useBooks } from "../hooks/books/useBooks";
 import { useDeleteBook } from "../hooks/books/useDeleteBook";
 import Swal from "sweetalert2";
 import { useUserContext } from "../contexts/UserContext";
+import { useUpdateBook } from "../hooks/books/useUpdateBook";
 
 export default function BooksPage() {
   const { user, isLoading: isLoadingUser } = useUserContext();
@@ -79,6 +80,24 @@ export default function BooksPage() {
     }
   };
 
+  const { mutate: updateBookMutate, isPending: isUpdating } = useUpdateBook();
+
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<BookType>>({});
+
+  const handleSave = () => {
+    // call your updateStudent hook
+    if (!editFormData) return;
+
+    updateBookMutate(editFormData as any, {
+      onSuccess: () => {
+        setEditingRowId(null); // close edit mode
+      },
+      onError: () => {
+        Swal.fire("Error", "Failed to update student", "error");
+      },
+    });
+  };
   return (
     <div className="flex h-screen bg-background w-full">
       <main className="flex-1 overflow-auto">
@@ -177,48 +196,140 @@ export default function BooksPage() {
                           </td>
                         </tr>
                       ) : (
-                        filteredBooks.map((book) => (
-                          <tr
-                            key={book.id}
-                            className="border-b border-gray-300"
-                          >
-                            <td className="p-4 font-medium">{book.title}</td>
-                            <td className="p-4">{book.author}</td>
-                            <td className="p-4">{book.isbn}</td>
-                            <td className="p-4">{book.location}</td>
-                            <td className="p-4">
-                              <span
-                                className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                  book.status
-                                )}`}
-                              >
-                                {book.status}
-                              </span>
-                            </td>
-                            {user && (
+                        filteredBooks.map((book) => {
+                          const isEditing = book.id === editingRowId;
+                          return (
+                            <tr
+                              key={book.id}
+                              className="border-b border-gray-300"
+                            >
                               <td className="p-4">
-                                <div className="flex justify-end items-center gap-3">
-                                  <button
-                                    onClick={() => {
-                                      setEditingBook(book);
-                                      setIsModalOpen(true);
-                                    }}
-                                    className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </button>
-
-                                  <button
-                                    onClick={() => handleDeleteBook(book.id)}
-                                    className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    value={editFormData.title || ""}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        title: e.target.value,
+                                      })
+                                    }
+                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                  />
+                                ) : (
+                                  book.title
+                                )}
                               </td>
-                            )}
-                          </tr>
-                        ))
+
+                              <td className="p-4">
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    value={editFormData.author || ""}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        author: e.target.value,
+                                      })
+                                    }
+                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                  />
+                                ) : (
+                                  book.author
+                                )}
+                              </td>
+
+                              <td className="p-4">
+                                {isEditing ? (
+                                  <input
+                                    type="email"
+                                    value={editFormData.isbn || ""}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        isbn: e.target.value,
+                                      })
+                                    }
+                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                  />
+                                ) : (
+                                  book.isbn
+                                )}
+                              </td>
+
+                              <td className="p-4">
+                                {isEditing ? (
+                                  <input
+                                    type="text"
+                                    value={editFormData.location || ""}
+                                    onChange={(e) =>
+                                      setEditFormData({
+                                        ...editFormData,
+                                        location: e.target.value,
+                                      })
+                                    }
+                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                  />
+                                ) : (
+                                  book.location
+                                )}
+                              </td>
+                              <td className="p-4">
+                                <span
+                                  className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                    book.status
+                                  )}`}
+                                >
+                                  {book.status}
+                                </span>
+                              </td>
+                              {user && (
+                                <td className="p-4">
+                                  {isEditing ? (
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        className="px-2 py-1 rounded cursor-pointer"
+                                        onClick={handleSave}
+                                      >
+                                        Save
+                                      </Button>
+                                      <Button
+                                        variant="secondary"
+                                        className="px-2 py-1 bg-gray-300 rounded cursor-pointer"
+                                        onClick={() => setEditingRowId(null)}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex justify-end items-center gap-3">
+                                      <button
+                                        onClick={() => {
+                                          // setEditingBook(book);
+                                          setEditingRowId(book.id);
+                                          setEditFormData(book);
+                                          // setIsModalOpen(true);
+                                        }}
+                                        className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </button>
+
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteBook(book.id)
+                                        }
+                                        className="p-1 rounded hover:bg-gray-50 text-red-600 cursor-pointer"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>

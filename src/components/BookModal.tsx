@@ -35,7 +35,7 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
   }, [book]);
 
   const { mutate: addBookMutate, isPending: isAdding } = useAddBooks();
-  const { mutate: updateBookMutate, isPending: isUpdating } = useUpdateBook();
+  // const { mutate: updateBookMutate, isPending: isUpdating } = useUpdateBook();
 
   const validate = () => {
     const newErrors = {
@@ -63,10 +63,10 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
     };
 
     if (book) {
-      updateBookMutate(
-        { id: book.id, updatedBook: bookData },
-        { onSuccess: () => onClose() }
-      );
+      // updateBookMutate(
+      //   { id: book.id, updatedBook: bookData },
+      //   { onSuccess: () => onClose() }
+      // );
     } else {
       addBookMutate(bookData, { onSuccess: () => onClose() });
     }
@@ -186,13 +186,13 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
             </Button>
             <Button
               type="submit"
-              disabled={isAdding || isUpdating}
+              disabled={isAdding /* || isUpdating */}
               className="h-11 px-6 cursor-pointer rounded-xl disabled:bg-gray-500 disabled:animate-pulse"
             >
               {book
-                ? isUpdating
+                ? /* isUpdating
                   ? "Updating..."
-                  : "Update Book"
+                  : "Update Book" */ "sampleee"
                 : isAdding
                 ? "Adding..."
                 : "Add Book"}
