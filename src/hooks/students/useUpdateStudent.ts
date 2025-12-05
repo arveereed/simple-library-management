@@ -1,6 +1,6 @@
 // hooks/useUpdateUser.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Student, StudentType } from "../../types";
+import type { StudentType } from "../../types";
 import { updateStudentByField } from "../../services/studentsService";
 
 export function useUpdateStudent() {

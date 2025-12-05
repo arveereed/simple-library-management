@@ -3,7 +3,6 @@ import { X } from "lucide-react";
 import { Button } from "./Button";
 import type { StudentType } from "../types";
 import { useAddStudents } from "../hooks/students/useAddStudents";
-import { useUpdateStudent } from "../hooks/students/useUpdateStudent";
 
 interface StudentModalProps {
   student?: StudentType | null;
@@ -33,8 +32,6 @@ export const StudentModal = ({ student, onClose }: StudentModalProps) => {
   }, [student]);
 
   const { mutate: addBookMutate, isPending: isAdding } = useAddStudents();
-  // const { mutate: updateStudentMutate, isPending: isUpdating } =
-  //   useUpdateStudent();
 
   const validate = () => {
     const newErrors = {

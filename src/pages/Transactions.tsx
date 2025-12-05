@@ -11,13 +11,11 @@ import { useAvailableBooks } from "../hooks/books/useAvailableBooks";
 import { useUserContext } from "../contexts/UserContext";
 
 export default function TransactionsPage() {
-  const { user, isLoading: isLoadingUser } = useUserContext();
+  const { user } = useUserContext();
 
-  const { data: booksData = [], isLoading: isLoadingBooks } =
-    useAvailableBooks();
-  const { data: studentsData, isLoading: isLoadingStudents } = useStudents();
-  const { data: activeRecordsData, isLoading: isLoadingActiveRecords } =
-    useTransactions();
+  const { data: booksData = [] } = useAvailableBooks();
+  const { data: studentsData } = useStudents();
+  const { data: activeRecordsData } = useTransactions();
 
   const books: BookType[] = booksData ?? [];
   const students: Student[] = studentsData ?? [];

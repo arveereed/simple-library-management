@@ -12,10 +12,10 @@ import { useUserContext } from "../contexts/UserContext";
 import { useUpdateBook } from "../hooks/books/useUpdateBook";
 
 export default function BooksPage() {
-  const { user, isLoading: isLoadingUser } = useUserContext();
+  const { user } = useUserContext();
 
   const { data: booksData = [], isLoading } = useBooks();
-  const { mutate: deleteBookMutate, isPending: isDeleting } = useDeleteBook();
+  const { mutate: deleteBookMutate } = useDeleteBook();
 
   const books: BookType[] = booksData ?? [];
 
@@ -80,7 +80,7 @@ export default function BooksPage() {
     }
   };
 
-  const { mutate: updateBookMutate, isPending: isUpdating } = useUpdateBook();
+  const { mutate: updateBookMutate } = useUpdateBook();
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<BookType>>({});

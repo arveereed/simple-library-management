@@ -13,11 +13,10 @@ import { useUserContext } from "../contexts/UserContext";
 import { useUpdateStudent } from "../hooks/students/useUpdateStudent";
 
 export default function Students() {
-  const { user, isLoading: isLoadingUser } = useUserContext();
+  const { user } = useUserContext();
 
   const { data: studentsData, isLoading } = useStudents();
-  const { mutate: deleteStudentMutate, isPending: isDeleting } =
-    useDeleteStudent();
+  const { mutate: deleteStudentMutate } = useDeleteStudent();
 
   const students: Student[] = studentsData ?? [];
 
@@ -35,8 +34,7 @@ export default function Students() {
   // const [editStudent, setEditStudent] = useState<StudentType | null>(null);
 
   // inline editing
-  const { mutate: updateStudentMutate, isPending: isUpdating } =
-    useUpdateStudent();
+  const { mutate: updateStudentMutate } = useUpdateStudent();
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<StudentType>>({});
 

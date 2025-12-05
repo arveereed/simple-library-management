@@ -3,7 +3,6 @@ import { X } from "lucide-react";
 import { Button } from "./Button";
 import type { BookType } from "../types";
 import { useAddBooks } from "../hooks/books/useAddBooks";
-import { useUpdateBook } from "../hooks/books/useUpdateBook";
 
 interface BookModalProps {
   book?: BookType | null;
@@ -35,7 +34,6 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
   }, [book]);
 
   const { mutate: addBookMutate, isPending: isAdding } = useAddBooks();
-  // const { mutate: updateBookMutate, isPending: isUpdating } = useUpdateBook();
 
   const validate = () => {
     const newErrors = {
