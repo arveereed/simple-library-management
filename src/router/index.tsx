@@ -8,6 +8,7 @@ import Students from "../pages/Students";
 import Transactions from "../pages/Transactions";
 import Login from "../pages/LoginForm";
 import Signup from "../pages/SignupForm";
+import ForgotPassword from "../pages/ForgotPassword";
 
 export default createBrowserRouter([
   {
@@ -23,4 +24,5 @@ export default createBrowserRouter([
   },
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Signup /> },
+  { path: "/forgotpassword", element: <ForgotPassword /> },
 ]);
