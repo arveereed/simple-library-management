@@ -13,7 +13,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
-  const [stage, setStage] = useState<"request" | "reset">("reset");
+  const [stage, setStage] = useState<"request" | "reset">("request");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // ✅ password visibility
