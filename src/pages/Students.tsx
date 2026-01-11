@@ -12,6 +12,15 @@ import Swal from "sweetalert2";
 import { useUserContext } from "../contexts/UserContext";
 import { useUpdateStudent } from "../hooks/students/useUpdateStudent";
 
+// SkeletonCell component
+const SkeletonCell = ({ width = "w-full" }: { width?: string }) => (
+  <div
+    className={`h-5 ${width} rounded-md bg-gray-200 relative overflow-hidden`}
+  >
+    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
+  </div>
+);
+
 export default function Students() {
   const { user } = useUserContext();
 
@@ -20,28 +29,21 @@ export default function Students() {
 
   const students: Student[] = studentsData ?? [];
 
-  const [filteredStudents, setFilteredStudents] = useState(students);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
-
-  // Add Modal
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  // Edit Modal
-  // const [isEditOpen, setIsEditOpen] = useState(false);
-  // const [editStudent, setEditStudent] = useState<StudentType | null>(null);
-
-  // inline editing
-  const { mutate: updateStudentMutate } = useUpdateStudent();
+  // Inline editing
+  const { mutate: updateStudentMutate, isPending } = useUpdateStudent();
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<StudentType>>({});
 
-  // 🔍 Filter students when search changes
+  // Filter students
   useEffect(() => {
     const lower = searchTerm.toLowerCase();
-
     const filtered = students.filter(
       (s) =>
         s.name.toLowerCase().includes(lower) ||
@@ -49,26 +51,17 @@ export default function Students() {
         s.email.toLowerCase().includes(lower) ||
         s.phone.toLowerCase().includes(lower)
     );
-
     setFilteredStudents(filtered);
   }, [searchTerm, students]);
 
-  // Open View Modal
   const openViewModal = (s: Student) => {
     setSelectedStudent(s);
     setIsViewOpen(true);
   };
 
-  // Open Edit Modal
-  // const openEditModal = (s: StudentType) => {
-  //   setEditStudent(s);
-  //   setIsEditOpen(true);
-  // };
-
-  // Open Add Modal
   const openAddModal = () => {
     setIsAddOpen(true);
-    setEditingRowId(null); // close edit mode
+    setEditingRowId(null);
   };
 
   const handleDeleteStudent = async (id: string) => {
@@ -91,7 +84,7 @@ export default function Students() {
 
       deleteStudentMutate(id, {
         onSuccess: () => {
-          Swal.close(); // 🔥 CLOSE LOADING
+          Swal.close();
           Swal.fire("Deleted!", "Student has been removed.", "success");
         },
         onError: () => {
@@ -103,16 +96,11 @@ export default function Students() {
   };
 
   const handleSave = () => {
-    // call your updateStudent hook
     if (!editFormData) return;
 
     updateStudentMutate(editFormData as StudentType, {
-      onSuccess: () => {
-        setEditingRowId(null); // close edit mode
-      },
-      onError: () => {
-        Swal.fire("Error", "Failed to update student", "error");
-      },
+      onSuccess: () => setEditingRowId(null),
+      onError: () => Swal.fire("Error", "Failed to update student", "error"),
     });
   };
 
@@ -173,27 +161,35 @@ export default function Students() {
 
                     <tbody className="bg-white text-base">
                       {isLoading ? (
-                        Array.from({ length: 5 }).map((_, i) => (
-                          <tr
-                            key={i}
-                            className="border-b border-gray-300 animate-pulse"
-                          >
-                            {["w-40", "w-32", "w-28", "w-28", "w-20"].map(
-                              (w, idx) => (
-                                <td key={idx} className="p-4">
-                                  <div
-                                    className={`h-4 bg-gray-200 dark:bg-gray-300 rounded-md ${w}`}
-                                  />
-                                </td>
-                              )
-                            )}
-
+                        Array.from({ length: 6 }).map((_, i) => (
+                          <tr key={i} className="border-b border-gray-200">
                             <td className="p-4">
-                              <div className="flex justify-end items-center gap-3">
-                                <div className="h-6 w-6 bg-gray-200 rounded-md"></div>
-                                <div className="h-6 w-6 bg-gray-200 rounded-md"></div>
-                              </div>
+                              <SkeletonCell width="w-3/4" />
                             </td>
+                            <td className="p-4">
+                              <SkeletonCell width="w-1/2" />
+                            </td>
+                            <td className="p-4">
+                              <SkeletonCell width="w-2/3" />
+                            </td>
+                            <td className="p-4">
+                              <SkeletonCell width="w-1/2" />
+                            </td>
+                            {user && (
+                              <td className="p-4">
+                                <div className="flex justify-end gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-gray-200 relative overflow-hidden">
+                                    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
+                                  </div>
+                                  <div className="h-8 w-8 rounded-full bg-gray-200 relative overflow-hidden">
+                                    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
+                                  </div>
+                                  <div className="h-8 w-8 rounded-full bg-gray-200 relative overflow-hidden">
+                                    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
+                                  </div>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                       ) : filteredStudents.length === 0 ? (
@@ -208,21 +204,26 @@ export default function Students() {
                       ) : (
                         filteredStudents.map((s) => {
                           const isEditing = s.id === editingRowId;
+                          const Skeleton = <SkeletonCell width="w-1/2" />;
+
                           return (
                             <tr key={s.id} className="border-b border-gray-300">
                               <td className="p-4">
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    value={editFormData.name || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        name: e.target.value,
-                                      })
-                                    }
-                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                                  />
+                                  isPending ? (
+                                    Skeleton
+                                  ) : (
+                                    <input
+                                      value={editFormData.name || ""}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          name: e.target.value,
+                                        })
+                                      }
+                                      className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                    />
+                                  )
                                 ) : (
                                   s.name
                                 )}
@@ -230,17 +231,20 @@ export default function Students() {
 
                               <td className="p-4">
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    value={editFormData.studentId || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        studentId: e.target.value,
-                                      })
-                                    }
-                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                                  />
+                                  isPending ? (
+                                    Skeleton
+                                  ) : (
+                                    <input
+                                      value={editFormData.studentId || ""}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          studentId: e.target.value,
+                                        })
+                                      }
+                                      className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                    />
+                                  )
                                 ) : (
                                   s.studentId
                                 )}
@@ -248,17 +252,21 @@ export default function Students() {
 
                               <td className="p-4">
                                 {isEditing ? (
-                                  <input
-                                    type="email"
-                                    value={editFormData.email || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        email: e.target.value,
-                                      })
-                                    }
-                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                                  />
+                                  isPending ? (
+                                    Skeleton
+                                  ) : (
+                                    <input
+                                      type="email"
+                                      value={editFormData.email || ""}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          email: e.target.value,
+                                        })
+                                      }
+                                      className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                    />
+                                  )
                                 ) : (
                                   s.email
                                 )}
@@ -266,17 +274,20 @@ export default function Students() {
 
                               <td className="p-4">
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    value={editFormData.phone || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        phone: e.target.value,
-                                      })
-                                    }
-                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                                  />
+                                  isPending ? (
+                                    Skeleton
+                                  ) : (
+                                    <input
+                                      value={editFormData.phone || ""}
+                                      onChange={(e) =>
+                                        setEditFormData({
+                                          ...editFormData,
+                                          phone: e.target.value,
+                                        })
+                                      }
+                                      className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                    />
+                                  )
                                 ) : (
                                   s.phone
                                 )}
@@ -287,14 +298,16 @@ export default function Students() {
                                   {isEditing ? (
                                     <div className="flex space-x-2">
                                       <Button
-                                        className="px-2 py-1 rounded cursor-pointer"
+                                        disabled={isPending}
+                                        className="cursor-pointer"
                                         onClick={handleSave}
                                       >
                                         Save
                                       </Button>
                                       <Button
+                                        disabled={isPending}
                                         variant="secondary"
-                                        className="px-2 py-1 bg-gray-300 rounded cursor-pointer"
+                                        className="bg-gray-300 cursor-pointer"
                                         onClick={() => setEditingRowId(null)}
                                       >
                                         Cancel
@@ -307,7 +320,6 @@ export default function Students() {
                                         className="p-1 rounded hover:bg-gray-50 text-gray-700 cursor-pointer"
                                         onClick={() => openViewModal(s)}
                                       >
-                                        {" "}
                                         <svg
                                           xmlns="http://www.w3.org/2000/svg"
                                           className="h-5 w-5"
@@ -315,26 +327,24 @@ export default function Students() {
                                           viewBox="0 0 24 24"
                                           stroke="currentColor"
                                         >
-                                          {" "}
                                           <path
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth={2}
                                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                          />{" "}
+                                          />
                                           <path
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth={2}
                                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                          />{" "}
-                                        </svg>{" "}
+                                          />
+                                        </svg>
                                       </button>
 
                                       {/* Edit */}
                                       <button
                                         onClick={() => {
-                                          // openEditModal(s);
                                           setEditingRowId(s.id);
                                           setEditFormData(s);
                                         }}
@@ -369,20 +379,10 @@ export default function Students() {
         </div>
       </main>
 
-      {/* Add Student Modal */}
       {isAddOpen && (
         <StudentModal student={null} onClose={() => setIsAddOpen(false)} />
       )}
 
-      {/* Edit Student Modal */}
-      {/* {isEditOpen && (
-        <StudentModal
-          student={editStudent}
-          onClose={() => setIsEditOpen(false)}
-        />
-      )} */}
-
-      {/* View Modal */}
       <StudentViewModal
         open={isViewOpen}
         onClose={() => setIsViewOpen(false)}

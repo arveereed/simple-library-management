@@ -9,8 +9,8 @@ const Dashboard: React.FC = () => {
   const { data: dashboardData, isLoading } = useDashboard();
 
   const renderCardSkeleton = () => (
-    <Card className="p-6 h-[200px] pt-15 animate-pulse">
-      <div className="h-5 bg-gray-300 rounded w-1/2 mb-4"></div>
+    <Card className="p-6 h-[200px] pt-15 animate-pulse ">
+      <div className="h-5 bg-gray-300 rounded  w-1/2 mb-4"></div>
       <div className="flex justify-between items-center">
         <div className="h-8 bg-gray-300 rounded w-12"></div>
         <div className="w-7 h-7 bg-gray-300 rounded-full"></div>

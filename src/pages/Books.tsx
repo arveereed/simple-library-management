@@ -80,7 +80,7 @@ export default function BooksPage() {
     }
   };
 
-  const { mutate: updateBookMutate } = useUpdateBook();
+  const { mutate: updateBookMutate, isPending } = useUpdateBook();
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<BookType>>({});
@@ -205,17 +205,25 @@ export default function BooksPage() {
                             >
                               <td className="p-4">
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    value={editFormData.title || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        title: e.target.value,
-                                      })
-                                    }
-                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                                  />
+                                  <>
+                                    {isPending ? (
+                                      <div className="animate-pulse">
+                                        <div className="h-5 bg-gray-300 rounded w-1/2 " />
+                                      </div>
+                                    ) : (
+                                      <input
+                                        type="text"
+                                        value={editFormData.title || ""}
+                                        onChange={(e) =>
+                                          setEditFormData({
+                                            ...editFormData,
+                                            title: e.target.value,
+                                          })
+                                        }
+                                        className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                      />
+                                    )}
+                                  </>
                                 ) : (
                                   book.title
                                 )}
@@ -223,17 +231,25 @@ export default function BooksPage() {
 
                               <td className="p-4">
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    value={editFormData.author || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        author: e.target.value,
-                                      })
-                                    }
-                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                                  />
+                                  <>
+                                    {isPending ? (
+                                      <div className="animate-pulse">
+                                        <div className="h-5 bg-gray-300 rounded w-1/2 " />
+                                      </div>
+                                    ) : (
+                                      <input
+                                        type="text"
+                                        value={editFormData.author || ""}
+                                        onChange={(e) =>
+                                          setEditFormData({
+                                            ...editFormData,
+                                            author: e.target.value,
+                                          })
+                                        }
+                                        className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                      />
+                                    )}
+                                  </>
                                 ) : (
                                   book.author
                                 )}
@@ -241,17 +257,25 @@ export default function BooksPage() {
 
                               <td className="p-4">
                                 {isEditing ? (
-                                  <input
-                                    type="email"
-                                    value={editFormData.isbn || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        isbn: e.target.value,
-                                      })
-                                    }
-                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                                  />
+                                  <>
+                                    {isPending ? (
+                                      <div className="animate-pulse">
+                                        <div className="h-5 bg-gray-300 rounded w-1/2 " />
+                                      </div>
+                                    ) : (
+                                      <input
+                                        type="email"
+                                        value={editFormData.isbn || ""}
+                                        onChange={(e) =>
+                                          setEditFormData({
+                                            ...editFormData,
+                                            isbn: e.target.value,
+                                          })
+                                        }
+                                        className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                      />
+                                    )}
+                                  </>
                                 ) : (
                                   book.isbn
                                 )}
@@ -259,17 +283,25 @@ export default function BooksPage() {
 
                               <td className="p-4">
                                 {isEditing ? (
-                                  <input
-                                    type="text"
-                                    value={editFormData.location || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        location: e.target.value,
-                                      })
-                                    }
-                                    className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
-                                  />
+                                  <>
+                                    {isPending ? (
+                                      <div className="animate-pulse">
+                                        <div className="h-5 bg-gray-300 rounded w-1/2 " />
+                                      </div>
+                                    ) : (
+                                      <input
+                                        type="text"
+                                        value={editFormData.location || ""}
+                                        onChange={(e) =>
+                                          setEditFormData({
+                                            ...editFormData,
+                                            location: e.target.value,
+                                          })
+                                        }
+                                        className="w-full py-1 pl-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-gray-300 focus:outline-none"
+                                      />
+                                    )}
+                                  </>
                                 ) : (
                                   book.location
                                 )}
