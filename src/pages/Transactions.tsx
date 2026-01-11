@@ -15,7 +15,7 @@ export default function TransactionsPage() {
 
   const { data: booksData = [] } = useAvailableBooks();
   const { data: studentsData } = useStudents();
-  const { data: activeRecordsData } = useTransactions();
+  const { data: activeRecordsData, isLoading } = useTransactions();
 
   const books: BookType[] = booksData ?? [];
   const students: Student[] = studentsData ?? [];
@@ -167,7 +167,18 @@ export default function TransactionsPage() {
             </h2>
             <p className="text-gray-600 mb-6">Currently checked out books</p>
 
-            {activeRecords.length === 0 ? (
+            {isLoading && (
+              <div className="p-4 animate-pulse border-b border-gray-300">
+                <div className="flex justify-between items-center">
+                  <div className="h-5 bg-gray-300 rounded w-1/2 mb-2" />
+                  <div className="w-7 h-7 bg-gray-300 rounded-full"></div>
+                </div>
+                <div className="h-5 bg-gray-300 rounded w-1/4 mb-2" />
+                <div className="h-5 bg-gray-300 rounded w-1/4 mb-2" />
+              </div>
+            )}
+
+            {activeRecords.length === 0 && !isLoading ? (
               <div className="text-center text-gray-500 py-8 text-lg">
                 No active borrowing records
               </div>
