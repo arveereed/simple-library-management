@@ -8,82 +8,47 @@ type BeforeInstallPromptEvent = Event & {
 export default function InstallButton() {
   const [promptEvent, setPromptEvent] =
     useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [status, setStatus] = useState("Checking install status...");
+  const [status, setStatus] = useState("waiting for install prompt...");
 
   useEffect(() => {
-    const checkInstalled = () => {
-      const standalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as Navigator & { standalone?: boolean })
-          .standalone === true;
-
-      if (standalone) {
-        setIsInstalled(true);
-        setStatus("App is installed");
-      } else {
-        setIsInstalled(false);
-        setStatus("App is not installed");
-      }
-    };
-
-    checkInstalled();
-
-    const handleBeforeInstallPrompt = (e: Event) => {
+    const handler = (e: Event) => {
       e.preventDefault();
       setPromptEvent(e as BeforeInstallPromptEvent);
-      setStatus("Ready to install");
+      setStatus("install prompt available");
+      console.log("beforeinstallprompt fired");
     };
 
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setPromptEvent(null);
-      setStatus("Installation finished");
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
+    window.addEventListener("beforeinstallprompt", handler);
 
     return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt,
-      );
-      window.removeEventListener("appinstalled", handleAppInstalled);
+      window.removeEventListener("beforeinstallprompt", handler);
     };
   }, []);
 
   const onInstall = async () => {
     if (!promptEvent) {
-      setStatus("Install prompt not available");
+      alert("Install prompt not available yet");
       return;
     }
 
     await promptEvent.prompt();
     const choice = await promptEvent.userChoice;
-
-    if (choice.outcome === "accepted") {
-      setStatus("Install accepted, waiting for completion...");
-      setPromptEvent(null);
-    } else {
-      setStatus("Install dismissed");
-    }
+    setStatus(`user choice: ${choice.outcome}`);
+    setPromptEvent(null);
   };
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <div className="rounded-lg bg-black px-3 py-2 text-sm text-white shadow-lg">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+      <div className="rounded bg-black px-3 py-2 text-xs text-white shadow">
         {status}
       </div>
 
-      {!isInstalled && promptEvent && (
-        <button
-          onClick={onInstall}
-          className="rounded-full bg-blue-600 px-5 py-3 text-white shadow-lg hover:bg-blue-700"
-        >
-          Install App
-        </button>
-      )}
+      <button
+        onClick={onInstall}
+        className="rounded-full bg-blue-600 px-5 py-3 text-white shadow-lg hover:bg-blue-700"
+      >
+        Install App
+      </button>
     </div>
   );
 }
