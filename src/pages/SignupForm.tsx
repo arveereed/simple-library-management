@@ -1,11 +1,8 @@
-// RegisterForm.tsx
-import { Link } from "react-router-dom";
-import Navbar_ from "../components/Navbar";
-import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useSignUp } from "@clerk/clerk-react";
 import VerifyEmailUI from "../components/VerifyEmailUI";
-import { XCircle, AlertCircle } from "lucide-react"; // optional icons
-import { useNavigate } from "react-router-dom";
+import { XCircle, AlertCircle } from "lucide-react";
 import type { UserDataSignUpType } from "../types.ts";
 import { addUser } from "../services/userService.ts";
 
@@ -25,11 +22,6 @@ export default function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    console.log(fullname);
-  }, [fullname]);
-
-  // Handle submission of sign-up form
   const onSignUpPress = async () => {
     if (!isLoaded) return;
     setIsLoading(true);
@@ -46,7 +38,6 @@ export default function SignupForm() {
       return;
     }
 
-    // Start sign-up process using email and password provided
     try {
       await signUp.create({
         emailAddress,
@@ -56,17 +47,12 @@ export default function SignupForm() {
         },
       });
 
-      // Send user an email with verification code
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
 
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
       setIsLoading(false);
       setError("");
       setPendingVerification(true);
     } catch (err: any) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
       if (err.errors?.[0]?.code === "form_identifier_exists") {
         setError("That email address is taken. Please try another.");
       } else if (err.errors?.[0]?.code === "form_param_format_invalid") {
@@ -79,23 +65,18 @@ export default function SignupForm() {
         setError("Please use a different password.");
       }
       setIsLoading(false);
-      // console.error(JSON.stringify(err, null, 2));
     }
   };
 
-  // Handle submission of verification form
   const onVerifyPress = async () => {
     if (!isLoaded) return;
     setIsLoading(true);
 
     try {
-      // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
         code,
       });
 
-      // If verification was completed, set the session to active
-      // and redirect the user
       if (signUpAttempt.status === "complete") {
         await setActive({ session: signUpAttempt.createdSessionId });
 
@@ -104,20 +85,16 @@ export default function SignupForm() {
           fullname: signUpAttempt.unsafeMetadata.fullname as string,
           email: signUpAttempt.emailAddress as string,
         };
-        addUser(userData);
+
+        await addUser(userData);
 
         navigate("/");
         setIsLoading(false);
       } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
         setIsLoading(false);
-
         console.error(JSON.stringify(signUpAttempt, null, 2));
       }
     } catch (err: any) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
       if (err.errors?.[0]?.code === "too_many_requests") {
         setError("Too many requests. Please try again in a bit.");
       } else if (err.errors?.[0]?.code === "form_param_nil") {
@@ -126,8 +103,6 @@ export default function SignupForm() {
         setError("The code is incorrect");
       }
       setIsLoading(false);
-
-      // console.error(JSON.stringify(err, null, 2));
     }
   };
 
@@ -147,122 +122,122 @@ export default function SignupForm() {
 
   return (
     <>
-      <Navbar_ />
-      <div className="flex min-h-screen flex-col justify-center p-4 bg-gray-50">
-        <div className="max-w-md w-full mx-auto border border-gray-300 rounded-2xl p-8 bg-white shadow-sm">
-          <h1 className="text-slate-900 text-center text-3xl font-semibold">
-            Sign up
-          </h1>
+      <div className="min-h-[calc(100vh-64px)] bg-gray-50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full items-center justify-center">
+          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+            <h1 className="text-center text-2xl font-semibold text-slate-900 sm:text-3xl">
+              Sign up
+            </h1>
 
-          {error && (
-            <div className="flex items-center justify-between  bg-red-500 text-white p-3 rounded-lg my-4">
-              <div className="flex items-center gap-2">
-                <AlertCircle size={20} />
-                <p>{error}</p>
-              </div>
-              <button className="cursor-pointer" onClick={() => setError("")}>
-                <XCircle size={20} />
-              </button>
-            </div>
-          )}
-
-          {/* Form */}
-          <form>
-            <div className="space-y-6">
-              {/* Fullname */}
-              <div>
-                <label
-                  htmlFor="fullname"
-                  className="text-sm font-medium text-slate-900"
+            {error && (
+              <div className="my-4 flex items-start justify-between gap-3 rounded-lg bg-red-500 p-3 text-white">
+                <div className="flex items-start gap-2">
+                  <AlertCircle size={20} className="mt-0.5 shrink-0" />
+                  <p className="text-sm sm:text-base">{error}</p>
+                </div>
+                <button
+                  className="shrink-0 cursor-pointer"
+                  onClick={() => setError("")}
+                  type="button"
                 >
-                  Fullname
-                </label>
-                <input
-                  id="fullname"
-                  type="text"
-                  placeholder="Enter fullname"
-                  value={fullname}
-                  onChange={(e) => setFullname(e.target.value)}
-                  className="border border-gray-300 w-full text-sm px-4 py-3 rounded-md outline-blue-500"
-                />
+                  <XCircle size={20} />
+                </button>
+              </div>
+            )}
+
+            <form className="mt-6">
+              <div className="space-y-5 sm:space-y-6">
+                <div>
+                  <label
+                    htmlFor="fullname"
+                    className="mb-1.5 block text-sm font-medium text-slate-900"
+                  >
+                    Fullname
+                  </label>
+                  <input
+                    id="fullname"
+                    type="text"
+                    placeholder="Enter fullname"
+                    value={fullname}
+                    onChange={(e) => setFullname(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="mb-1.5 block text-sm font-medium text-slate-900"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="text"
+                    placeholder="Enter email"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="mb-1.5 block text-sm font-medium text-slate-900"
+                  >
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="Enter password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="cpassword"
+                    className="mb-1.5 block text-sm font-medium text-slate-900"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    id="cpassword"
+                    type="password"
+                    placeholder="Enter confirm password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                  />
+                </div>
               </div>
 
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="text-sm font-medium text-slate-900"
+              <div className="mt-8 sm:mt-10">
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={onSignUpPress}
+                  className="w-full rounded-md bg-black px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 hover:shadow-md disabled:cursor-not-allowed disabled:bg-neutral-400"
                 >
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="text"
-                  placeholder="Enter email"
-                  value={emailAddress}
-                  onChange={(e) => setEmailAddress(e.target.value)}
-                  className="border border-gray-300 w-full text-sm px-4 py-3 rounded-md outline-blue-500"
-                />
+                  {isLoading ? "Loading..." : "Create an account"}
+                </button>
               </div>
 
-              {/* Password */}
-              <div>
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium text-slate-900"
+              <p className="mt-6 text-center text-sm text-slate-600">
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  className="font-medium text-blue-600 hover:underline"
                 >
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="border border-gray-300 w-full text-sm px-4 py-3 rounded-md outline-blue-500"
-                />
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label
-                  htmlFor="cpassword"
-                  className="text-sm font-medium text-slate-900"
-                >
-                  Confirm Password
-                </label>
-                <input
-                  id="cpassword"
-                  type="password"
-                  placeholder="Enter confirm password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="border border-gray-300 w-full text-sm px-4 py-3 rounded-md outline-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="mt-12">
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={onSignUpPress}
-                className="bg-black text-white hover:bg-neutral-800 shadow-sm hover:shadow-md  cursor-pointer w-full py-3 px-4 text-sm font-medium rounded-md disabled:bg-neutral-400 "
-              >
-                {isLoading ? "Loading..." : "Create an account"}
-              </button>
-            </div>
-
-            <p className="text-center text-sm text-slate-600 mt-6">
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                className="text-blue-600 font-medium hover:underline"
-              >
-                Login here
-              </Link>
-            </p>
-          </form>
+                  Login here
+                </Link>
+              </p>
+            </form>
+          </div>
         </div>
       </div>
     </>

@@ -20,9 +20,9 @@ export default createBrowserRouter([
       { path: "/books", element: <Books /> },
       { path: "/students", element: <Students /> },
       { path: "/transactions", element: <Transactions /> },
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Signup /> },
     ],
   },
-  { path: "/login", element: <Login /> },
-  { path: "/register", element: <Signup /> },
   { path: "/forgotpassword", element: <ForgotPassword /> },
 ]);

@@ -33,6 +33,16 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
           </div>
+          {/* Chart */}
+          {isLoading ? (
+            <div className="w-full h-[300px] bg-gray-300 rounded animate-pulse" />
+          ) : (
+            <BookStatusChart
+              available={dashboardData?.availableBooks?.length || 0}
+              checkedOut={dashboardData?.checkoutBooks?.length || 0}
+              overdue={dashboardData?.overdue?.length || 0}
+            />
+          )}
 
           {/* Cards */}
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
@@ -86,17 +96,6 @@ const Dashboard: React.FC = () => {
               </>
             )}
           </CardContent>
-
-          {/* Chart */}
-          {isLoading ? (
-            <div className="w-full h-[300px] bg-gray-300 rounded animate-pulse" />
-          ) : (
-            <BookStatusChart
-              available={dashboardData?.availableBooks?.length || 0}
-              checkedOut={dashboardData?.checkoutBooks?.length || 0}
-              overdue={dashboardData?.overdue?.length || 0}
-            />
-          )}
         </div>
       </main>
     </div>
