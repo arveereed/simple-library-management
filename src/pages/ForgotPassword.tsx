@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSignIn, useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function ForgotPassword() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -81,15 +81,6 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 relative">
-      {/* 🔙 Back to Sign In */}
-      <button
-        onClick={() => navigate("/login")}
-        className="absolute cursor-pointer top-6 left-6 flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
-      >
-        <ArrowLeft size={18} />
-        Back
-      </button>
-
       <div className="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-xl p-8 border border-gray-200 dark:border-gray-700">
         <h1 className="text-2xl font-semibold mb-6 text-center text-gray-900 dark:text-white">
           Forgot Password

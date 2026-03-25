@@ -22,7 +22,7 @@ export default createBrowserRouter([
       { path: "/transactions", element: <Transactions /> },
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Signup /> },
+      { path: "/forgotpassword", element: <ForgotPassword /> },
     ],
   },
-  { path: "/forgotpassword", element: <ForgotPassword /> },
 ]);

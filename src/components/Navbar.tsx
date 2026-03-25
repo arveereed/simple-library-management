@@ -30,6 +30,7 @@ export default function Navbar_({ onMenuClick }: NavbarProps) {
     <nav className="w-full bg-white shadow-md px-4 sm:px-6 py-3">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
         {/* LEFT SIDE */}
+
         <div className="flex items-center gap-3 min-w-0">
           {/* Mobile menu button */}
           <button
