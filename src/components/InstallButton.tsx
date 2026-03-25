@@ -8,47 +8,62 @@ type BeforeInstallPromptEvent = Event & {
 export default function InstallButton() {
   const [promptEvent, setPromptEvent] =
     useState<BeforeInstallPromptEvent | null>(null);
-  const [status, setStatus] = useState("waiting for install prompt...");
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setPromptEvent(e as BeforeInstallPromptEvent);
-      setStatus("install prompt available");
-      console.log("beforeinstallprompt fired");
+    const checkInstalled = () => {
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        // iOS Safari
+        (window.navigator as Navigator & { standalone?: boolean })
+          .standalone === true;
+
+      setIsInstalled(standalone);
     };
 
-    window.addEventListener("beforeinstallprompt", handler);
+    checkInstalled();
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setPromptEvent(e as BeforeInstallPromptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setPromptEvent(null);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 
   const onInstall = async () => {
-    if (!promptEvent) {
-      alert("Install prompt not available yet");
-      return;
-    }
+    if (!promptEvent) return;
 
     await promptEvent.prompt();
     const choice = await promptEvent.userChoice;
-    setStatus(`user choice: ${choice.outcome}`);
-    setPromptEvent(null);
+
+    if (choice.outcome === "accepted") {
+      setPromptEvent(null);
+    }
   };
 
-  return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
-      <div className="rounded bg-black px-3 py-2 text-xs text-white shadow">
-        {status}
-      </div>
+  if (isInstalled || !promptEvent) return null;
 
-      <button
-        onClick={onInstall}
-        className="rounded-full bg-blue-600 px-5 py-3 text-white shadow-lg hover:bg-blue-700"
-      >
-        Install App
-      </button>
-    </div>
+  return (
+    <button
+      onClick={onInstall}
+      className="rounded-full cursor-pointer bg-blue-600 px-5 py-3 text-white shadow-lg hover:bg-blue-700"
+    >
+      Install App
+    </button>
   );
 }
