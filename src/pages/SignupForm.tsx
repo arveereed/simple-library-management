@@ -15,16 +15,17 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [pendingVerification, setPendingVerification] =
-    useState<boolean>(false);
+  const [pendingVerification, setPendingVerification] = useState(false);
   const [code, setCode] = useState("");
 
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const onSignUpPress = async () => {
     if (!isLoaded) return;
+
     setIsLoading(true);
+    setError(null);
 
     if (!emailAddress || !confirmPassword || !password || !fullname) {
       setError("All fields are required.");
@@ -47,30 +48,41 @@ export default function SignupForm() {
         },
       });
 
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      await signUp.prepareEmailAddressVerification({
+        strategy: "email_code",
+      });
 
-      setIsLoading(false);
-      setError("");
       setPendingVerification(true);
     } catch (err: any) {
-      if (err.errors?.[0]?.code === "form_identifier_exists") {
+      console.error("Signup failed:", err);
+
+      if (err?.errors?.[0]?.code === "form_identifier_exists") {
         setError("That email address is taken. Please try another.");
-      } else if (err.errors?.[0]?.code === "form_param_format_invalid") {
+      } else if (err?.errors?.[0]?.code === "form_param_format_invalid") {
         setError("Email address must be a valid email address.");
-      } else if (err.errors?.[0]?.code === "form_param_nil") {
-        setError("Email or password is empty");
-      } else if (err.errors?.[0]?.code === "form_password_length_too_short") {
+      } else if (err?.errors?.[0]?.code === "form_param_nil") {
+        setError("Email or password is empty.");
+      } else if (err?.errors?.[0]?.code === "form_password_length_too_short") {
         setError("Passwords must be 8 characters or more.");
-      } else if (err.errors?.[0]?.code === "form_password_pwned") {
+      } else if (err?.errors?.[0]?.code === "form_password_pwned") {
         setError("Please use a different password.");
+      } else {
+        setError(
+          err?.errors?.[0]?.longMessage ||
+            err?.errors?.[0]?.message ||
+            "Signup failed. Please check your Clerk setup and try again.",
+        );
       }
+    } finally {
       setIsLoading(false);
     }
   };
 
   const onVerifyPress = async () => {
     if (!isLoaded) return;
+
     setIsLoading(true);
+    setError(null);
 
     try {
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
@@ -87,21 +99,28 @@ export default function SignupForm() {
         };
 
         await addUser(userData);
-
         navigate("/");
-        setIsLoading(false);
       } else {
-        setIsLoading(false);
-        console.error(JSON.stringify(signUpAttempt, null, 2));
+        console.error("Verification not complete:", signUpAttempt);
+        setError("Verification is not complete yet. Please try again.");
       }
     } catch (err: any) {
-      if (err.errors?.[0]?.code === "too_many_requests") {
+      console.error("Verification failed:", err);
+
+      if (err?.errors?.[0]?.code === "too_many_requests") {
         setError("Too many requests. Please try again in a bit.");
-      } else if (err.errors?.[0]?.code === "form_param_nil") {
-        setError("Enter a code");
-      } else if (err.errors?.[0]?.code === "form_code_incorrect") {
-        setError("The code is incorrect");
+      } else if (err?.errors?.[0]?.code === "form_param_nil") {
+        setError("Enter the verification code.");
+      } else if (err?.errors?.[0]?.code === "form_code_incorrect") {
+        setError("The code is incorrect.");
+      } else {
+        setError(
+          err?.errors?.[0]?.longMessage ||
+            err?.errors?.[0]?.message ||
+            "Verification failed. Please try again.",
+        );
       }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -121,125 +140,126 @@ export default function SignupForm() {
   }
 
   return (
-    <>
-      <div className="min-h-[calc(100vh-64px)] bg-gray-50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full items-center justify-center">
-          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
-            <h1 className="text-center text-2xl font-semibold text-slate-900 sm:text-3xl">
-              Sign up
-            </h1>
+    <div className="min-h-[calc(100vh-64px)] bg-gray-50 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full items-center justify-center">
+        <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+          <h1 className="text-center text-2xl font-semibold text-slate-900 sm:text-3xl">
+            Sign up
+          </h1>
 
-            {error && (
-              <div className="my-4 flex items-start justify-between gap-3 rounded-lg bg-red-500 p-3 text-white">
-                <div className="flex items-start gap-2">
-                  <AlertCircle size={20} className="mt-0.5 shrink-0" />
-                  <p className="text-sm sm:text-base">{error}</p>
-                </div>
-                <button
-                  className="shrink-0 cursor-pointer"
-                  onClick={() => setError("")}
-                  type="button"
-                >
-                  <XCircle size={20} />
-                </button>
+          {error && (
+            <div className="my-4 flex items-start justify-between gap-3 rounded-lg bg-red-500 p-3 text-white">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={20} className="mt-0.5 shrink-0" />
+                <p className="text-sm sm:text-base">{error}</p>
               </div>
-            )}
+              <button
+                className="shrink-0 cursor-pointer"
+                onClick={() => setError(null)}
+                type="button"
+              >
+                <XCircle size={20} />
+              </button>
+            </div>
+          )}
 
-            <form className="mt-6">
-              <div className="space-y-5 sm:space-y-6">
-                <div>
-                  <label
-                    htmlFor="fullname"
-                    className="mb-1.5 block text-sm font-medium text-slate-900"
-                  >
-                    Fullname
-                  </label>
-                  <input
-                    id="fullname"
-                    type="text"
-                    placeholder="Enter fullname"
-                    value={fullname}
-                    onChange={(e) => setFullname(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="mb-1.5 block text-sm font-medium text-slate-900"
-                  >
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    type="text"
-                    placeholder="Enter email"
-                    value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="mb-1.5 block text-sm font-medium text-slate-900"
-                  >
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    type="password"
-                    placeholder="Enter password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="cpassword"
-                    className="mb-1.5 block text-sm font-medium text-slate-900"
-                  >
-                    Confirm Password
-                  </label>
-                  <input
-                    id="cpassword"
-                    type="password"
-                    placeholder="Enter confirm password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
-                  />
-                </div>
+          <form className="mt-6">
+            <div className="space-y-5 sm:space-y-6">
+              <div>
+                <label
+                  htmlFor="fullname"
+                  className="mb-1.5 block text-sm font-medium text-slate-900"
+                >
+                  Fullname
+                </label>
+                <input
+                  id="fullname"
+                  type="text"
+                  placeholder="Enter fullname"
+                  value={fullname}
+                  onChange={(e) => setFullname(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                />
               </div>
 
-              <div className="mt-8 sm:mt-10">
-                <button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={onSignUpPress}
-                  className="w-full rounded-md bg-black px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 hover:shadow-md disabled:cursor-not-allowed disabled:bg-neutral-400"
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-sm font-medium text-slate-900"
                 >
-                  {isLoading ? "Loading..." : "Create an account"}
-                </button>
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Enter email"
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                />
               </div>
 
-              <p className="mt-6 text-center text-sm text-slate-600">
-                Already have an account?{" "}
-                <Link
-                  to="/login"
-                  className="font-medium text-blue-600 hover:underline"
+              <div>
+                <label
+                  htmlFor="password"
+                  className="mb-1.5 block text-sm font-medium text-slate-900"
                 >
-                  Login here
-                </Link>
-              </p>
-            </form>
-          </div>
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="cpassword"
+                  className="mb-1.5 block text-sm font-medium text-slate-900"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="cpassword"
+                  type="password"
+                  placeholder="Enter confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8 sm:mt-10">
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={onSignUpPress}
+                className="w-full rounded-md bg-black px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 hover:shadow-md disabled:cursor-not-allowed disabled:bg-neutral-400"
+              >
+                {isLoading ? "Loading..." : "Create an account"}
+              </button>
+            </div>
+
+            <p className="mt-6 text-center text-sm text-slate-600">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="font-medium text-blue-600 hover:underline"
+              >
+                Login here
+              </Link>
+            </p>
+
+            {/* Required for Clerk bot protection / captcha */}
+            <div id="clerk-captcha" className="mt-4" />
+          </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }

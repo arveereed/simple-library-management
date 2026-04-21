@@ -1,5 +1,11 @@
 import { useUser } from "@clerk/clerk-react";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { useFirestoreUser } from "../hooks/useFirestoreUser";
 import type { FireStoreUserType } from "../types";
 
@@ -15,16 +21,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { isSignedIn, user: clerkUser } = useUser();
 
   const { data: userData, isLoading } = useFirestoreUser(
-    isSignedIn ? clerkUser?.id : undefined
+    isSignedIn ? clerkUser?.id : undefined,
   );
 
   const [user, setUser] = useState<FireStoreUserType | null>(null);
 
   // sync React Query → Context
   // CONDITION: checks if the user is empty
-  if (userData && user !== userData) {
-    setUser(userData);
-  }
+  useEffect(() => {
+    if (userData) {
+      setUser(userData);
+    }
+  }, [userData]);
 
   return (
     <UserContext.Provider value={{ user, isLoading, setUser }}>
