@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Search, Plus, Edit, Trash2, Users, Eye } from "lucide-react";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
@@ -27,7 +27,7 @@ export default function Students() {
   const { mutate: deleteStudentMutate } = useDeleteStudent();
   const { mutate: updateStudentMutate, isPending } = useUpdateStudent();
 
-  const students: Student[] = studentsData ?? [];
+  const students = useMemo<Student[]>(() => studentsData ?? [], [studentsData]);
 
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState("");

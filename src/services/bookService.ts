@@ -26,64 +26,54 @@ export const addBook = async (book: BookType) => {
   }
 };
 
-export const getBooks = async (): Promise<BookType[] | null> => {
+export const getBooks = async (): Promise<BookType[]> => {
   try {
     const booksCollection = collection(db, "books");
     const q = query(booksCollection, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
 
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: data.id,
-          title: data.title,
-          author: data.author,
-          isbn: data.isbn,
-          location: data.location,
-          status: data.status,
-        };
-      }) as BookType[];
-    }
-
-    console.warn(`No books found`);
-    return null;
+    return querySnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        title: data.title,
+        author: data.author,
+        isbn: data.isbn,
+        location: data.location,
+        status: data.status,
+      };
+    }) as BookType[];
   } catch (error) {
     console.error("Error fetching all books:", error);
-    return null;
+    return [];
   }
 };
 
-export const getAvailableBooks = async () => {
+export const getAvailableBooks = async (): Promise<BookType[]> => {
   try {
     const booksCollection = collection(db, "books");
     const q = query(
       booksCollection,
       where("status", "==", "Available"),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
     );
 
     const querySnapshot = await getDocs(q);
 
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: data.id,
-          title: data.title,
-          author: data.author,
-          isbn: data.isbn,
-          location: data.location,
-          status: data.status,
-        };
-      }) as BookType[];
-    }
-
-    console.warn(`No books found`);
-    return null;
+    return querySnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        title: data.title,
+        author: data.author,
+        isbn: data.isbn,
+        location: data.location,
+        status: data.status,
+      };
+    }) as BookType[];
   } catch (error) {
     console.error("Error fetching available books:", error);
-    return null;
+    return [];
   }
 };
 
@@ -95,7 +85,7 @@ export const updateBookByField = async (updatedBook: BookType) => {
     if (snapshot.empty) throw new Error("Book not found");
 
     const updates = snapshot.docs.map((d) =>
-      updateDoc(doc(db, "books", d.id), updatedBook)
+      updateDoc(doc(db, "books", d.id), updatedBook),
     );
     await Promise.all(updates);
 

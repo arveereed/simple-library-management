@@ -19,7 +19,7 @@ import { useUserContext } from "../contexts/UserContext";
 export default function TransactionsPage() {
   const { user } = useUserContext();
 
-  const { data: booksData = [] } = useAvailableBooks();
+  const { data: booksData } = useAvailableBooks();
   const { data: studentsData } = useStudents();
   const { data: activeRecordsData, isLoading } = useTransactions();
 

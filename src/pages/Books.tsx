@@ -14,7 +14,7 @@ import { useUpdateBook } from "../hooks/books/useUpdateBook";
 export default function BooksPage() {
   const { user } = useUserContext();
 
-  const { data: booksData = [], isLoading } = useBooks();
+  const { data: booksData, isLoading } = useBooks();
   const { mutate: deleteBookMutate } = useDeleteBook();
   const { mutate: updateBookMutate, isPending } = useUpdateBook();
 
