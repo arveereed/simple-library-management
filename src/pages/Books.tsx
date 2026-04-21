@@ -11,6 +11,46 @@ import Swal from "sweetalert2";
 import { useUserContext } from "../contexts/UserContext";
 import { useUpdateBook } from "../hooks/books/useUpdateBook";
 
+const normalizeIsbn = (value: string) => value.replace(/-/g, "").toUpperCase();
+
+const isValidIsbn10 = (isbn: string) => {
+  if (!/^\d{9}[\dX]$/.test(isbn)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += (i + 1) * Number(isbn[i]);
+  }
+
+  const lastChar = isbn[9];
+  sum += lastChar === "X" ? 100 : 10 * Number(lastChar);
+
+  return sum % 11 === 0;
+};
+
+const isValidIsbn13 = (isbn: string) => {
+  if (!/^\d{13}$/.test(isbn)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += Number(isbn[i]) * (i % 2 === 0 ? 1 : 3);
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return checkDigit === Number(isbn[12]);
+};
+
+const isValidIsbn = (value: string) => {
+  const normalized = normalizeIsbn(value);
+  return isValidIsbn10(normalized) || isValidIsbn13(normalized);
+};
+
+const createEmptyErrors = () => ({
+  title: "",
+  author: "",
+  isbn: "",
+  location: "",
+});
+
 export default function BooksPage() {
   const { user } = useUserContext();
 
@@ -27,6 +67,7 @@ export default function BooksPage() {
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<BookType>>({});
+  const [editErrors, setEditErrors] = useState(createEmptyErrors());
 
   useEffect(() => {
     const filtered = books.filter(
@@ -70,12 +111,102 @@ export default function BooksPage() {
     }
   };
 
-  const handleSave = () => {
-    if (!editFormData) return;
+  const startEditing = (book: BookType) => {
+    setEditingRowId(book.id);
+    setEditFormData({ ...book });
+    setEditErrors(createEmptyErrors());
+  };
 
-    updateBookMutate(editFormData as any, {
+  const cancelEditing = () => {
+    setEditingRowId(null);
+    setEditFormData({});
+    setEditErrors(createEmptyErrors());
+  };
+
+  const handleEditTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditFormData({
+      ...editFormData,
+      title: e.target.value,
+    });
+
+    if (editErrors.title) {
+      setEditErrors((prev) => ({ ...prev, title: "" }));
+    }
+  };
+
+  const handleEditAuthorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditFormData({
+      ...editFormData,
+      author: e.target.value,
+    });
+
+    if (editErrors.author) {
+      setEditErrors((prev) => ({ ...prev, author: "" }));
+    }
+  };
+
+  const handleEditIsbnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleanedValue = e.target.value.replace(/[^0-9xX-]/g, "").toUpperCase();
+
+    setEditFormData({
+      ...editFormData,
+      isbn: cleanedValue,
+    });
+
+    if (editErrors.isbn) {
+      setEditErrors((prev) => ({ ...prev, isbn: "" }));
+    }
+  };
+
+  const handleEditLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditFormData({
+      ...editFormData,
+      location: e.target.value,
+    });
+
+    if (editErrors.location) {
+      setEditErrors((prev) => ({ ...prev, location: "" }));
+    }
+  };
+
+  const validateEditForm = () => {
+    const trimmedTitle = editFormData.title?.trim() ?? "";
+    const trimmedAuthor = editFormData.author?.trim() ?? "";
+    const trimmedIsbn = editFormData.isbn?.trim() ?? "";
+    const trimmedLocation = editFormData.location?.trim() ?? "";
+
+    const newErrors = {
+      title: trimmedTitle ? "" : "Title is required",
+      author: trimmedAuthor ? "" : "Author is required",
+      isbn: !trimmedIsbn
+        ? "ISBN is required"
+        : !isValidIsbn(trimmedIsbn)
+          ? "Enter a valid ISBN-10 or ISBN-13"
+          : "",
+      location: trimmedLocation ? "" : "Location is required",
+    };
+
+    setEditErrors(newErrors);
+    return !Object.values(newErrors).some((err) => err);
+  };
+
+  const handleSave = (book: BookType) => {
+    if (!validateEditForm()) return;
+
+    const updatedBook: BookType = {
+      id: book.id,
+      title: editFormData.title?.trim() ?? "",
+      author: editFormData.author?.trim() ?? "",
+      isbn: editFormData.isbn?.trim() ?? "",
+      location: editFormData.location?.trim() ?? "",
+      status: (editFormData.status as BookType["status"]) ?? book.status,
+    };
+
+    updateBookMutate(updatedBook as any, {
       onSuccess: () => {
         setEditingRowId(null);
+        setEditFormData({});
+        setEditErrors(createEmptyErrors());
       },
       onError: () => {
         Swal.fire("Error", "Failed to update book", "error");
@@ -96,11 +227,15 @@ export default function BooksPage() {
     }
   };
 
+  const editInputClass = (field: keyof typeof editErrors) =>
+    `w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200 ${
+      editErrors[field] ? "border-red-500" : "border-gray-300"
+    }`;
+
   return (
     <div className="min-h-screen w-full bg-gray-50">
       <main className="w-full">
         <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-          {/* Header */}
           <div className="mb-6 flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
@@ -132,7 +267,6 @@ export default function BooksPage() {
             )}
           </div>
 
-          {/* Search */}
           <div className="mb-5 sm:mb-6">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -145,7 +279,6 @@ export default function BooksPage() {
             </div>
           </div>
 
-          {/* Table Card */}
           <Card className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -232,17 +365,20 @@ export default function BooksPage() {
                                 isPending ? (
                                   <div className="h-5 w-1/2 animate-pulse rounded bg-gray-300" />
                                 ) : (
-                                  <input
-                                    type="text"
-                                    value={editFormData.title || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        title: e.target.value,
-                                      })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200"
-                                  />
+                                  <div>
+                                    <input
+                                      type="text"
+                                      value={editFormData.title || ""}
+                                      onChange={handleEditTitleChange}
+                                      className={editInputClass("title")}
+                                      placeholder="e.g. Clean Code"
+                                    />
+                                    {editErrors.title && (
+                                      <p className="mt-1 text-xs text-red-500">
+                                        {editErrors.title}
+                                      </p>
+                                    )}
+                                  </div>
                                 )
                               ) : (
                                 <span className="font-medium text-gray-900">
@@ -256,17 +392,20 @@ export default function BooksPage() {
                                 isPending ? (
                                   <div className="h-5 w-1/2 animate-pulse rounded bg-gray-300" />
                                 ) : (
-                                  <input
-                                    type="text"
-                                    value={editFormData.author || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        author: e.target.value,
-                                      })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200"
-                                  />
+                                  <div>
+                                    <input
+                                      type="text"
+                                      value={editFormData.author || ""}
+                                      onChange={handleEditAuthorChange}
+                                      className={editInputClass("author")}
+                                      placeholder="e.g. Robert C. Martin"
+                                    />
+                                    {editErrors.author && (
+                                      <p className="mt-1 text-xs text-red-500">
+                                        {editErrors.author}
+                                      </p>
+                                    )}
+                                  </div>
                                 )
                               ) : (
                                 book.author
@@ -278,17 +417,20 @@ export default function BooksPage() {
                                 isPending ? (
                                   <div className="h-5 w-1/2 animate-pulse rounded bg-gray-300" />
                                 ) : (
-                                  <input
-                                    type="text"
-                                    value={editFormData.isbn || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        isbn: e.target.value,
-                                      })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200"
-                                  />
+                                  <div>
+                                    <input
+                                      type="text"
+                                      value={editFormData.isbn || ""}
+                                      onChange={handleEditIsbnChange}
+                                      className={editInputClass("isbn")}
+                                      placeholder="e.g. 978-3-16-148410-0"
+                                    />
+                                    {editErrors.isbn && (
+                                      <p className="mt-1 text-xs text-red-500">
+                                        {editErrors.isbn}
+                                      </p>
+                                    )}
+                                  </div>
                                 )
                               ) : (
                                 book.isbn
@@ -300,17 +442,20 @@ export default function BooksPage() {
                                 isPending ? (
                                   <div className="h-5 w-1/2 animate-pulse rounded bg-gray-300" />
                                 ) : (
-                                  <input
-                                    type="text"
-                                    value={editFormData.location || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        location: e.target.value,
-                                      })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200"
-                                  />
+                                  <div>
+                                    <input
+                                      type="text"
+                                      value={editFormData.location || ""}
+                                      onChange={handleEditLocationChange}
+                                      className={editInputClass("location")}
+                                      placeholder="e.g. Shelf A - Row 2"
+                                    />
+                                    {editErrors.location && (
+                                      <p className="mt-1 text-xs text-red-500">
+                                        {editErrors.location}
+                                      </p>
+                                    )}
+                                  </div>
                                 )
                               ) : (
                                 book.location
@@ -333,14 +478,14 @@ export default function BooksPage() {
                                   <div className="flex flex-col justify-end gap-2 sm:flex-row">
                                     <Button
                                       className="rounded-xl px-3 py-2 cursor-pointer"
-                                      onClick={handleSave}
+                                      onClick={() => handleSave(book)}
                                     >
                                       Save
                                     </Button>
                                     <Button
                                       variant="secondary"
                                       className="rounded-xl bg-gray-200 px-3 py-2 text-gray-800 cursor-pointer hover:bg-gray-300"
-                                      onClick={() => setEditingRowId(null)}
+                                      onClick={cancelEditing}
                                     >
                                       Cancel
                                     </Button>
@@ -348,10 +493,7 @@ export default function BooksPage() {
                                 ) : (
                                   <div className="flex justify-end gap-2">
                                     <button
-                                      onClick={() => {
-                                        setEditingRowId(book.id);
-                                        setEditFormData(book);
-                                      }}
+                                      onClick={() => startEditing(book)}
                                       className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-700 transition hover:bg-gray-100 cursor-pointer"
                                       aria-label={`Edit ${book.title}`}
                                     >

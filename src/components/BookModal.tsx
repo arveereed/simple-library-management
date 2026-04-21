@@ -9,6 +9,40 @@ interface BookModalProps {
   onClose: () => void;
 }
 
+const normalizeIsbn = (value: string) => value.replace(/-/g, "").toUpperCase();
+
+const isValidIsbn10 = (isbn: string) => {
+  if (!/^\d{9}[\dX]$/.test(isbn)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += (i + 1) * Number(isbn[i]);
+  }
+
+  const lastChar = isbn[9];
+  sum += lastChar === "X" ? 10 * 10 : 10 * Number(lastChar);
+
+  return sum % 11 === 0;
+};
+
+const isValidIsbn13 = (isbn: string) => {
+  if (!/^\d{13}$/.test(isbn)) return false;
+
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += Number(isbn[i]) * (i % 2 === 0 ? 1 : 3);
+  }
+
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return checkDigit === Number(isbn[12]);
+};
+
+const isValidIsbn = (value: string) => {
+  const normalized = normalizeIsbn(value);
+
+  return isValidIsbn10(normalized) || isValidIsbn13(normalized);
+};
+
 export const BookModal = ({ book, onClose }: BookModalProps) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
@@ -35,13 +69,33 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
 
   const { mutate: addBookMutate, isPending: isAdding } = useAddBooks();
 
+  const handleIsbnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleanedValue = e.target.value.replace(/[^0-9xX-]/g, "").toUpperCase();
+
+    setIsbn(cleanedValue);
+
+    if (errors.isbn) {
+      setErrors((prev) => ({ ...prev, isbn: "" }));
+    }
+  };
+
   const validate = () => {
+    const trimmedTitle = title.trim();
+    const trimmedAuthor = author.trim();
+    const trimmedIsbn = isbn.trim();
+    const trimmedLocation = location.trim();
+
     const newErrors = {
-      title: title ? "" : "Title is required",
-      author: author ? "" : "Author is required",
-      isbn: isbn ? "" : "ISBN is required",
-      location: location ? "" : "Location is required",
+      title: trimmedTitle ? "" : "Title is required",
+      author: trimmedAuthor ? "" : "Author is required",
+      isbn: !trimmedIsbn
+        ? "ISBN is required"
+        : !isValidIsbn(trimmedIsbn)
+          ? "Enter a valid ISBN-10 or ISBN-13"
+          : "",
+      location: trimmedLocation ? "" : "Location is required",
     };
+
     setErrors(newErrors);
     return !Object.values(newErrors).some((err) => err);
   };
@@ -53,10 +107,10 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
 
     const bookData: BookType = {
       id: book ? book.id : Date.now().toString(),
-      title,
-      author,
-      isbn,
-      location,
+      title: title.trim(),
+      author: author.trim(),
+      isbn: isbn.trim(),
+      location: location.trim(),
       status,
     };
 
@@ -92,7 +146,6 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
         </h2>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
-          {/** Title */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-1">
               Title <span className="text-red-500">*</span>
@@ -102,13 +155,13 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={inputClass("title")}
+              placeholder="e.g. Clean Code"
             />
             {errors.title && (
               <span className="text-red-500 text-sm mt-1">{errors.title}</span>
             )}
           </div>
 
-          {/** Author */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-1">
               Author <span className="text-red-500">*</span>
@@ -118,29 +171,31 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
               className={inputClass("author")}
+              placeholder="e.g. Robert C. Martin"
             />
             {errors.author && (
               <span className="text-red-500 text-sm mt-1">{errors.author}</span>
             )}
           </div>
 
-          {/** ISBN */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-1">
-              ISBN <span className="text-red-500">*</span>
+              ISBN{" "}
+              <span className="text-gray-500">(e.g. 978-3-16-148410-0)</span>{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={isbn}
-              onChange={(e) => setIsbn(e.target.value)}
+              onChange={handleIsbnChange}
               className={inputClass("isbn")}
+              placeholder="e.g. 978-3-16-148410-0"
             />
             {errors.isbn && (
               <span className="text-red-500 text-sm mt-1">{errors.isbn}</span>
             )}
           </div>
 
-          {/** Location */}
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-1">
               Location <span className="text-red-500">*</span>
@@ -150,6 +205,7 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className={inputClass("location")}
+              placeholder="e.g. Shelf A - Row 2"
             />
             {errors.location && (
               <span className="text-red-500 text-sm mt-1">
@@ -158,7 +214,6 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
             )}
           </div>
 
-          {/** Status */}
           {/* <div className="flex flex-col">
             <label className="text-sm font-semibold mb-1">Status</label>
             <select
@@ -172,7 +227,6 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
             </select>
           </div> */}
 
-          {/** Buttons */}
           <div className="flex justify-end mt-8 gap-3">
             <Button
               variant="secondary"
@@ -187,13 +241,7 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
               disabled={isAdding /* || isUpdating */}
               className="h-11 px-6 cursor-pointer rounded-xl disabled:bg-gray-500 disabled:animate-pulse"
             >
-              {book
-                ? /* isUpdating
-                  ? "Updating..."
-                  : "Update Book" */ "sampleee"
-                : isAdding
-                ? "Adding..."
-                : "Add Book"}
+              {book ? "sampleee" : isAdding ? "Adding..." : "Add Book"}
             </Button>
           </div>
         </form>
