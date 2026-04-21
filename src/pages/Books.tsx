@@ -175,6 +175,17 @@ export default function BooksPage() {
     const trimmedIsbn = editFormData.isbn?.trim() ?? "";
     const trimmedLocation = editFormData.location?.trim() ?? "";
 
+    const normalizedIsbn = normalizeIsbn(trimmedIsbn);
+
+    const isbnExists = books.some((existingBook) => {
+      const existingNormalizedIsbn = normalizeIsbn(existingBook.isbn ?? "");
+
+      return (
+        existingNormalizedIsbn === normalizedIsbn &&
+        existingBook.id !== editingRowId
+      );
+    });
+
     const newErrors = {
       title: trimmedTitle ? "" : "Title is required",
       author: trimmedAuthor ? "" : "Author is required",
@@ -182,7 +193,9 @@ export default function BooksPage() {
         ? "ISBN is required"
         : !isValidIsbn(trimmedIsbn)
           ? "Enter a valid ISBN-10 or ISBN-13"
-          : "",
+          : isbnExists
+            ? "ISBN already exists"
+            : "",
       location: trimmedLocation ? "" : "Location is required",
     };
 

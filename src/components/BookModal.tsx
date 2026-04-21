@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { Button } from "./Button";
 import type { BookType } from "../types";
 import { useAddBooks } from "../hooks/books/useAddBooks";
+import { useBooks } from "../hooks/books/useBooks";
 
 interface BookModalProps {
   book?: BookType | null;
@@ -20,7 +21,7 @@ const isValidIsbn10 = (isbn: string) => {
   }
 
   const lastChar = isbn[9];
-  sum += lastChar === "X" ? 10 * 10 : 10 * Number(lastChar);
+  sum += lastChar === "X" ? 100 : 10 * Number(lastChar);
 
   return sum % 11 === 0;
 };
@@ -39,7 +40,6 @@ const isValidIsbn13 = (isbn: string) => {
 
 const isValidIsbn = (value: string) => {
   const normalized = normalizeIsbn(value);
-
   return isValidIsbn10(normalized) || isValidIsbn13(normalized);
 };
 
@@ -68,6 +68,8 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
   }, [book]);
 
   const { mutate: addBookMutate, isPending: isAdding } = useAddBooks();
+  const { data: booksData = [] } = useBooks();
+  const books: BookType[] = booksData;
 
   const handleIsbnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cleanedValue = e.target.value.replace(/[^0-9xX-]/g, "").toUpperCase();
@@ -85,6 +87,17 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
     const trimmedIsbn = isbn.trim();
     const trimmedLocation = location.trim();
 
+    const normalizedIsbn = normalizeIsbn(trimmedIsbn);
+
+    const isbnExists = books.some((existingBook) => {
+      const existingNormalizedIsbn = normalizeIsbn(existingBook.isbn ?? "");
+
+      return (
+        existingNormalizedIsbn === normalizedIsbn &&
+        existingBook.id !== book?.id
+      );
+    });
+
     const newErrors = {
       title: trimmedTitle ? "" : "Title is required",
       author: trimmedAuthor ? "" : "Author is required",
@@ -92,7 +105,9 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
         ? "ISBN is required"
         : !isValidIsbn(trimmedIsbn)
           ? "Enter a valid ISBN-10 or ISBN-13"
-          : "",
+          : isbnExists
+            ? "ISBN already exists"
+            : "",
       location: trimmedLocation ? "" : "Location is required",
     };
 
@@ -214,19 +229,6 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
             )}
           </div>
 
-          {/* <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-1">Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as BookType["status"])}
-              className="w-full h-12 px-4 border rounded-xl focus:outline-none border-gray-300"
-            >
-              <option value="Available">Available</option>
-              <option value="Checked Out">Checked Out</option>
-              <option value="Overdue">Overdue</option>
-            </select>
-          </div> */}
-
           <div className="flex justify-end mt-8 gap-3">
             <Button
               variant="secondary"
@@ -238,10 +240,10 @@ export const BookModal = ({ book, onClose }: BookModalProps) => {
             </Button>
             <Button
               type="submit"
-              disabled={isAdding /* || isUpdating */}
+              disabled={isAdding}
               className="h-11 px-6 cursor-pointer rounded-xl disabled:bg-gray-500 disabled:animate-pulse"
             >
-              {book ? "sampleee" : isAdding ? "Adding..." : "Add Book"}
+              {book ? "Update Book" : isAdding ? "Adding..." : "Add Book"}
             </Button>
           </div>
         </form>
