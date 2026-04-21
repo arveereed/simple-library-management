@@ -20,6 +20,13 @@ const SkeletonCell = ({ width = "w-full" }: { width?: string }) => (
   </div>
 );
 
+const createEmptyErrors = () => ({
+  name: "",
+  studentId: "",
+  email: "",
+  phone: "",
+});
+
 export default function Students() {
   const { user } = useUserContext();
 
@@ -38,6 +45,7 @@ export default function Students() {
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<StudentType>>({});
+  const [editErrors, setEditErrors] = useState(createEmptyErrors());
 
   useEffect(() => {
     const lower = searchTerm.toLowerCase();
@@ -61,6 +69,20 @@ export default function Students() {
   const openAddModal = () => {
     setIsAddOpen(true);
     setEditingRowId(null);
+    setEditFormData({});
+    setEditErrors(createEmptyErrors());
+  };
+
+  const startEditing = (student: Student) => {
+    setEditingRowId(student.id);
+    setEditFormData({ ...student });
+    setEditErrors(createEmptyErrors());
+  };
+
+  const cancelEditing = () => {
+    setEditingRowId(null);
+    setEditFormData({});
+    setEditErrors(createEmptyErrors());
   };
 
   const handleDeleteStudent = async (id: string) => {
@@ -94,20 +116,134 @@ export default function Students() {
     }
   };
 
-  const handleSave = () => {
-    if (!editFormData) return;
+  const handleEditNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleanedValue = e.target.value
+      .replace(/[^\p{L}\s.'-]/gu, "")
+      .replace(/\s{2,}/g, " ")
+      .replace(/^\s/, "");
 
-    updateStudentMutate(editFormData as StudentType, {
-      onSuccess: () => setEditingRowId(null),
+    setEditFormData({
+      ...editFormData,
+      name: cleanedValue,
+    });
+
+    if (editErrors.name) {
+      setEditErrors((prev) => ({ ...prev, name: "" }));
+    }
+  };
+
+  const handleEditStudentIdChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setEditFormData({
+      ...editFormData,
+      studentId: e.target.value,
+    });
+
+    if (editErrors.studentId) {
+      setEditErrors((prev) => ({ ...prev, studentId: "" }));
+    }
+  };
+
+  const handleEditEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditFormData({
+      ...editFormData,
+      email: e.target.value,
+    });
+
+    if (editErrors.email) {
+      setEditErrors((prev) => ({ ...prev, email: "" }));
+    }
+  };
+
+  const handleEditPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 11);
+
+    setEditFormData({
+      ...editFormData,
+      phone: digitsOnly,
+    });
+
+    if (editErrors.phone) {
+      setEditErrors((prev) => ({ ...prev, phone: "" }));
+    }
+  };
+
+  const validateEditForm = () => {
+    const trimmedName = editFormData.name?.trim() ?? "";
+    const trimmedStudentId = editFormData.studentId?.trim() ?? "";
+    const trimmedEmail = editFormData.email?.trim() ?? "";
+    const trimmedPhone = editFormData.phone?.trim() ?? "";
+
+    const fullNameRegex =
+      /^\p{L}+(?:[.'-]?\p{L}+)*(?:\s+\p{L}+(?:[.'-]?\p{L}+)*)+$/u;
+    const phoneRegex = /^09\d{9}$/;
+
+    const normalizedStudentId = trimmedStudentId.toLowerCase();
+
+    const studentIdExists = students.some((existingStudent) => {
+      const existingId = existingStudent.studentId?.trim().toLowerCase();
+
+      return (
+        existingId === normalizedStudentId &&
+        existingStudent.id !== editingRowId
+      );
+    });
+
+    const newErrors = {
+      name: !trimmedName
+        ? "Full Name is required"
+        : !fullNameRegex.test(trimmedName)
+          ? "Enter a valid full name (first and last name only)"
+          : "",
+      studentId: !trimmedStudentId
+        ? "Student ID is required"
+        : studentIdExists
+          ? "Student ID already exists"
+          : "",
+      email: !trimmedEmail ? "Email is required" : "",
+      phone: !trimmedPhone
+        ? "Phone is required"
+        : !phoneRegex.test(trimmedPhone)
+          ? "Phone must be 11 digits, numbers only, and start with 09"
+          : "",
+    };
+
+    setEditErrors(newErrors);
+    return !Object.values(newErrors).some((err) => err);
+  };
+
+  const handleSave = (student: Student) => {
+    if (!validateEditForm()) return;
+
+    const updatedStudent: StudentType = {
+      id: student.id,
+      name: editFormData.name?.trim() ?? "",
+      studentId: editFormData.studentId?.trim() ?? "",
+      email: editFormData.email?.trim() ?? "",
+      phone: editFormData.phone?.trim() ?? "",
+    };
+
+    updateStudentMutate(updatedStudent, {
+      onSuccess: () => {
+        setEditingRowId(null);
+        setEditFormData({});
+        setEditErrors(createEmptyErrors());
+        Swal.fire("Updated!", "Student has been updated.", "success");
+      },
       onError: () => Swal.fire("Error", "Failed to update student", "error"),
     });
   };
+
+  const editInputClass = (field: keyof typeof editErrors) =>
+    `w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200 ${
+      editErrors[field] ? "border-red-500" : "border-gray-300"
+    }`;
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
       <main className="w-full">
         <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-          {/* Header */}
           <div className="mb-6 flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
@@ -137,7 +273,6 @@ export default function Students() {
             )}
           </div>
 
-          {/* Search */}
           <div className="mb-5 sm:mb-6">
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -150,7 +285,6 @@ export default function Students() {
             </div>
           </div>
 
-          {/* Table */}
           <Card className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -246,16 +380,19 @@ export default function Students() {
                                 isPending ? (
                                   skeleton
                                 ) : (
-                                  <input
-                                    value={editFormData.name || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        name: e.target.value,
-                                      })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200"
-                                  />
+                                  <div>
+                                    <input
+                                      value={editFormData.name || ""}
+                                      onChange={handleEditNameChange}
+                                      className={editInputClass("name")}
+                                      placeholder="e.g. Juan Dela Cruz"
+                                    />
+                                    {editErrors.name && (
+                                      <p className="mt-1 text-xs text-red-500">
+                                        {editErrors.name}
+                                      </p>
+                                    )}
+                                  </div>
                                 )
                               ) : (
                                 <span className="font-medium text-gray-900">
@@ -269,16 +406,19 @@ export default function Students() {
                                 isPending ? (
                                   skeleton
                                 ) : (
-                                  <input
-                                    value={editFormData.studentId || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        studentId: e.target.value,
-                                      })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200"
-                                  />
+                                  <div>
+                                    <input
+                                      value={editFormData.studentId || ""}
+                                      onChange={handleEditStudentIdChange}
+                                      className={editInputClass("studentId")}
+                                      placeholder="e.g. STU-001"
+                                    />
+                                    {editErrors.studentId && (
+                                      <p className="mt-1 text-xs text-red-500">
+                                        {editErrors.studentId}
+                                      </p>
+                                    )}
+                                  </div>
                                 )
                               ) : (
                                 s.studentId
@@ -290,17 +430,20 @@ export default function Students() {
                                 isPending ? (
                                   skeleton
                                 ) : (
-                                  <input
-                                    type="email"
-                                    value={editFormData.email || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        email: e.target.value,
-                                      })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200"
-                                  />
+                                  <div>
+                                    <input
+                                      type="email"
+                                      value={editFormData.email || ""}
+                                      onChange={handleEditEmailChange}
+                                      className={editInputClass("email")}
+                                      placeholder="student@college.edu"
+                                    />
+                                    {editErrors.email && (
+                                      <p className="mt-1 text-xs text-red-500">
+                                        {editErrors.email}
+                                      </p>
+                                    )}
+                                  </div>
                                 )
                               ) : (
                                 s.email
@@ -312,16 +455,21 @@ export default function Students() {
                                 isPending ? (
                                   skeleton
                                 ) : (
-                                  <input
-                                    value={editFormData.phone || ""}
-                                    onChange={(e) =>
-                                      setEditFormData({
-                                        ...editFormData,
-                                        phone: e.target.value,
-                                      })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-gray-200"
-                                  />
+                                  <div>
+                                    <input
+                                      value={editFormData.phone || ""}
+                                      onChange={handleEditPhoneChange}
+                                      className={editInputClass("phone")}
+                                      inputMode="numeric"
+                                      maxLength={11}
+                                      placeholder="e.g. 09858081610"
+                                    />
+                                    {editErrors.phone && (
+                                      <p className="mt-1 text-xs text-red-500">
+                                        {editErrors.phone}
+                                      </p>
+                                    )}
+                                  </div>
                                 )
                               ) : (
                                 s.phone
@@ -335,7 +483,7 @@ export default function Students() {
                                     <Button
                                       disabled={isPending}
                                       className="rounded-xl px-3 py-2 cursor-pointer"
-                                      onClick={handleSave}
+                                      onClick={() => handleSave(s)}
                                     >
                                       Save
                                     </Button>
@@ -343,7 +491,7 @@ export default function Students() {
                                       disabled={isPending}
                                       variant="secondary"
                                       className="rounded-xl bg-gray-200 px-3 py-2 text-gray-800 cursor-pointer hover:bg-gray-300"
-                                      onClick={() => setEditingRowId(null)}
+                                      onClick={cancelEditing}
                                     >
                                       Cancel
                                     </Button>
@@ -359,10 +507,7 @@ export default function Students() {
                                     </button>
 
                                     <button
-                                      onClick={() => {
-                                        setEditingRowId(s.id);
-                                        setEditFormData(s);
-                                      }}
+                                      onClick={() => startEditing(s)}
                                       className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-700 transition hover:bg-gray-100 cursor-pointer"
                                       aria-label={`Edit ${s.name}`}
                                     >
