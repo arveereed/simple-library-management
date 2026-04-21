@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useSignUp } from "@clerk/clerk-react";
 import VerifyEmailUI from "../components/VerifyEmailUI";
-import { XCircle, AlertCircle } from "lucide-react";
+import { XCircle, AlertCircle, EyeOff, Eye } from "lucide-react";
 import type { UserDataSignUpType } from "../types.ts";
 import { addUser } from "../services/userService.ts";
 
@@ -21,14 +21,30 @@ export default function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showCPassword, setShowCPassword] = useState(false);
+
   const onSignUpPress = async () => {
     if (!isLoaded) return;
 
     setIsLoading(true);
     setError(null);
 
-    if (!emailAddress || !confirmPassword || !password || !fullname) {
+    const fullNameTrimmed = fullname.trim();
+
+    if (!emailAddress || !confirmPassword || !password || !fullNameTrimmed) {
       setError("All fields are required.");
+      setIsLoading(false);
+      return;
+    }
+
+    const fullNameRegex =
+      /^[A-Za-z]+(?:[.'-]?[A-Za-z]+)*(?:\s+[A-Za-z]+(?:[.'-]?[A-Za-z]+)*)+$/;
+
+    if (!fullNameRegex.test(fullNameTrimmed)) {
+      setError(
+        "Enter your valid full name (first and last name, letters only).",
+      );
       setIsLoading(false);
       return;
     }
@@ -206,14 +222,24 @@ export default function SignupForm() {
                 >
                   Password
                 </label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer p-1 text-black/55 hover:text-black"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -223,14 +249,24 @@ export default function SignupForm() {
                 >
                   Confirm Password
                 </label>
-                <input
-                  id="cpassword"
-                  type="password"
-                  placeholder="Enter confirm password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    id="cpassword"
+                    type={showCPassword ? "text" : "password"}
+                    placeholder="Enter confirm password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-blue-500"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowCPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer p-1 text-black/55 hover:text-black"
+                  >
+                    {showCPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
             </div>
 
