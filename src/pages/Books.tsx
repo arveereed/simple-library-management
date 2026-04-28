@@ -26,7 +26,7 @@ const isValidIsbn10 = (isbn: string) => {
 
   return sum % 11 === 0;
 };
-
+/* 
 const isValidIsbn13 = (isbn: string) => {
   if (!/^\d{13}$/.test(isbn)) return false;
 
@@ -42,7 +42,7 @@ const isValidIsbn13 = (isbn: string) => {
 const isValidIsbn = (value: string) => {
   const normalized = normalizeIsbn(value);
   return isValidIsbn10(normalized) || isValidIsbn13(normalized);
-};
+}; */
 
 const createEmptyErrors = () => ({
   title: "",
@@ -191,11 +191,9 @@ export default function BooksPage() {
       author: trimmedAuthor ? "" : "Author is required",
       isbn: !trimmedIsbn
         ? "ISBN is required"
-        : !isValidIsbn(trimmedIsbn)
-          ? "Enter a valid ISBN-10 or ISBN-13"
-          : isbnExists
-            ? "ISBN already exists"
-            : "",
+        : isbnExists
+          ? "ISBN already exists"
+          : "",
       location: trimmedLocation ? "" : "Location is required",
     };
 
